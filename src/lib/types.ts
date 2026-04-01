@@ -1,5 +1,6 @@
 export type HabitType = 'boolean' | 'count' | 'timer' | 'negative';
 export type Section = 'morning' | 'deep_work' | 'wind_down' | 'custom';
+export type Mode = 'standard' | 'minimal' | 'focus' | 'deep_work' | 'study' | 'fitness' | 'monk' | 'detox' | 'recovery' | 'custom';
 
 export interface Habit {
   id: string;
@@ -10,7 +11,7 @@ export interface Habit {
   icon?: string;
   targetCount?: number;
   targetMinutes?: number;
-  schedule: number[]; // 0=Sun..6=Sat, empty=daily
+  schedule: number[];
   order: number;
   archived: boolean;
   createdAt: string;
@@ -20,7 +21,7 @@ export interface Habit {
 export interface Completion {
   id: string;
   habitId: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   completed: boolean;
   value?: number;
   note?: string;
@@ -32,6 +33,16 @@ export interface DayStats {
   total: number;
   completed: number;
   rate: number;
+}
+
+export interface ModeConfig {
+  id: Mode;
+  label: string;
+  description: string;
+  command: string;
+  color: string;
+  visibleSections: Section[];
+  presetHabits: Omit<Habit, 'id' | 'createdAt' | 'updatedAt'>[];
 }
 
 export const SECTION_CONFIG: Record<Section, { label: string; command: string; color: string }> = {
