@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@theme inline {
+  --color-bg-primary: #0A0A0F;
+  --color-bg-secondary: #12121A;
+  --color-bg-tertiary: #1A1A25;
+  --color-bg-input: #0F0F18;
+  --color-border-primary: #1E1E2E;
+  --color-border-secondary: #2A2A3A;
+  --color-text-primary: #E8E8ED;
+  --color-text-secondary: #6B6B80;
+  --color-text-tertiary: #4A4A5A;
+  --color-accent-green: #00FF9F;
+  --color-accent-yellow: #FFB800;
+  --color-accent-blue: #00B4FF;
+  --color-accent-purple: #A855F7;
+  --color-accent-red: #FF4444;
+  --color-accent-cyan: #22D3EE;
+  --color-accent-orange: #FF6B2C;
+  --color-heatmap-0: #1A1A25;
+  --color-heatmap-1: #0D3320;
+  --color-heatmap-2: #166534;
+  --color-heatmap-3: #22C55E;
+  --color-heatmap-4: #00FF9F;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background: #0A0A0F;
+  color-scheme: dark;
+}
+
+body {
+  background: #0A0A0F;
+  color: #E8E8ED;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0F;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A2A3A;
+  border-radius: 2px;
+}
+
+input, textarea, select {
+  font-family: var(--font-mono);
+}

@@ -1,0 +1,22 @@
+{
+  "name": "init.habits — Terminal Habit Tracker",
+  "short_name": "init.habits",
+  "description": "A terminal-aesthetic habit tracker for disciplined minds",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0F",
+  "theme_color": "#0A0A0F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
