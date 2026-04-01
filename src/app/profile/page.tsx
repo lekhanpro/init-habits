@@ -6,7 +6,9 @@ import TerminalHeader from '@/components/layout/TerminalHeader';
 import { useHabitStore } from '@/stores/habitStore';
 import { MODE_CONFIGS } from '@/lib/modes';
 import { Mode } from '@/lib/types';
-import { Settings, Download, Upload, Moon, Zap, BookOpen, Dumbbell, Coffee, Shield, Minimize2, Target, Heart, RotateCcw, Trash2, Palette } from 'lucide-react';
+import { Settings, Download, Upload, Moon, Zap, BookOpen, Dumbbell, Coffee, Shield, Minimize2, Target, Heart, RotateCcw, Trash2, Palette, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MODE_ICONS: Record<string, React.ElementType> = {
@@ -23,6 +25,8 @@ const MODE_ICONS: Record<string, React.ElementType> = {
 };
 
 export default function ProfilePage() {
+  const { user, authEnabled, signOut } = useAuth();
+  const router = useRouter();
   const { habits, completions, activeMode, freshStart, resetToDemo, isDemo } = useHabitStore();
   const [showConfirm, setShowConfirm] = useState<Mode | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -83,7 +87,9 @@ export default function ProfilePage() {
       {/* User info */}
       <div className="px-4 py-4 border-b border-border-primary">
         <div className="text-[10px] text-text-tertiary mb-1">// user session</div>
-        <div className="text-[14px] text-accent-green font-medium">user@init.habits</div>
+        <div className="text-[14px] text-accent-green font-medium">
+          {authEnabled && user?.email ? user.email : 'user@init.habits'}
+        </div>
         <div className="text-[11px] text-text-secondary mt-1">
           {habits.filter(h => !h.archived).length} active habits · {totalCompletions} total completions
         </div>
@@ -186,6 +192,22 @@ export default function ProfilePage() {
           </button>
         )}
       </div>
+
+      {/* Sign out */}
+      {authEnabled && user && (
+        <div className="px-4 pb-2">
+          <button
+            onClick={async () => { await signOut(); router.replace('/login'); }}
+            className="flex items-center gap-3 w-full py-2.5 border-b border-border-primary hover:bg-bg-tertiary/30 transition-colors"
+          >
+            <LogOut size={14} strokeWidth={1.5} className="text-accent-red" />
+            <div className="text-left">
+              <div className="text-[12px] text-accent-red">Sign Out</div>
+              <div className="text-[10px] text-text-tertiary">$ auth.logout()</div>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Version info */}
       <div className="px-4 py-4 text-center">
