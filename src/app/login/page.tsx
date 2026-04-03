@@ -30,6 +30,24 @@ export default function LoginPage() {
 
   if (loading || user) return null;
 
+  const friendlyError = (err: unknown): string => {
+    const msg = err instanceof Error ? err.message : String(err);
+    const code = msg.match(/\(auth\/([^)]+)\)/)?.[1];
+    const map: Record<string, string> = {
+      'invalid-email': 'Invalid email address',
+      'user-disabled': 'Account has been disabled',
+      'user-not-found': 'No account found with this email',
+      'wrong-password': 'Incorrect password',
+      'invalid-credential': 'Invalid email or password',
+      'email-already-in-use': 'An account with this email already exists',
+      'weak-password': 'Password must be at least 6 characters',
+      'popup-closed-by-user': 'Sign-in popup was closed',
+      'cancelled-popup-request': 'Sign-in cancelled',
+      'network-request-failed': 'Network error — check your connection',
+    };
+    return code ? (map[code] || code.replace(/-/g, ' ')) : msg;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -41,8 +59,7 @@ export default function LoginPage() {
         await signIn(email, password);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Authentication failed';
-      setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim() || 'Authentication failed');
+      setError(friendlyError(err));
     } finally {
       setSubmitting(false);
     }
@@ -53,8 +70,7 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Google sign-in failed';
-      setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim() || 'Google sign-in failed');
+      setError(friendlyError(err));
     }
   };
 
