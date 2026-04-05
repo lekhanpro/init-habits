@@ -44,6 +44,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase config (contains API keys)
-android/app/google-services.json
 

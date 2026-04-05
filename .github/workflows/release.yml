@@ -27,28 +27,6 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Create placeholder google-services.json
-        run: |
-          cat > android/app/google-services.json << 'GSEOF'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "init-habits-placeholder",
-              "storage_bucket": "init-habits-placeholder.appspot.com"
-            },
-            "client": [{
-              "client_info": {
-                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                "android_client_info": { "package_name": "com.habittracker" }
-              },
-              "oauth_client": [],
-              "api_key": [{ "current_key": "AIzaSyDUMMYKEYFORBUILDONLY000000000" }],
-              "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
-            }],
-            "configuration_version": "1"
-          }
-          GSEOF
-
       - name: Get dependencies
         run: flutter pub get
 

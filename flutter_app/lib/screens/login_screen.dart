@@ -4,7 +4,8 @@ import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final VoidCallback? onContinueAsGuest;
+  const LoginScreen({super.key, this.onContinueAsGuest});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -181,6 +182,24 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 24),
+                      // Continue as guest
+                      if (widget.onContinueAsGuest != null)
+                        Center(
+                          child: GestureDetector(
+                            onTap: widget.onContinueAsGuest,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.borderPrimary),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Text('\$ continue --guest', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

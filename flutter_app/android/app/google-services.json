@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "391671861358",
+    "project_id": "init-habits",
+    "storage_bucket": "init-habits.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:391671861358:android:0e4bc1c0d288d1071d967f",
+        "android_client_info": {
+          "package_name": "com.habittracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "391671861358-2vu0vul5kav214f1nh3hvk1n19hgb4b9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd6PvH8b3UGucRVYUV9Fk5ixKtJPWFZbM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "391671861358-2vu0vul5kav214f1nh3hvk1n19hgb4b9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

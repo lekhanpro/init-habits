@@ -56,14 +56,23 @@ class InitHabitsApp extends StatelessWidget {
   }
 }
 
-class _AuthGate extends StatelessWidget {
+class _AuthGate extends StatefulWidget {
   const _AuthGate();
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  static bool _guestMode = false;
+
+  void _enterGuestMode() => setState(() => _guestMode = true);
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
-    if (auth.isAuthenticated) return const MainShell();
-    return const LoginScreen();
+    if (auth.isAuthenticated || _guestMode) return const MainShell();
+    return LoginScreen(onContinueAsGuest: _enterGuestMode);
   }
 }
 
