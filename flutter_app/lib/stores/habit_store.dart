@@ -119,6 +119,32 @@ class HabitStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateCompletionNote(String habitId, String date, String? note) {
+    final c = getCompletionForHabit(habitId, date);
+    if (c != null) {
+      final idx = completions.indexOf(c);
+      completions[idx] = Completion(
+        id: c.id,
+        habitId: c.habitId,
+        date: c.date,
+        completed: c.completed,
+        value: c.value,
+        note: note,
+        createdAt: c.createdAt,
+      );
+      _save();
+      notifyListeners();
+    }
+  }
+
+  void reorderHabit(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) newIndex--;
+    final item = habits.removeAt(oldIndex);
+    habits.insert(newIndex, item);
+    _save();
+    notifyListeners();
+  }
+
   void deleteHabit(String id) {
     habits.removeWhere((h) => h.id == id);
     completions.removeWhere((c) => c.habitId == id);
@@ -207,6 +233,73 @@ class HabitStore extends ChangeNotifier {
 
   int get totalCompletions => completions.where((c) => c.completed).length;
   int get activeHabits => habits.where((h) => !h.archived).length;
+
+  // Weekly review data
+  Map<String, dynamic> getWeeklyReview() {
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1 + 7));
+    int total = 0, done = 0;
+    int perfectDays = 0;
+    String bestDay = '';
+    int bestDayCount = 0;
+    final habitScores = <String, int>{};
+
+    for (int d = 0; d < 7; d++) {
+      final date = weekStart.add(Duration(days: d));
+      final dateStr = _dateFmt.format(date);
+      final active = habits.where((h) => !h.archived).toList();
+      if (active.isEmpty) continue;
+      total += active.length;
+      final dayDone = getCompletionsForDate(dateStr).length;
+      done += dayDone;
+      if (dayDone >= active.length) perfectDays++;
+      if (dayDone > bestDayCount) {
+        bestDayCount = dayDone;
+        bestDay = DateFormat('EEEE').format(date);
+      }
+      for (final h in active) {
+        if (getCompletionForHabit(h.id, dateStr) != null) {
+          habitScores[h.id] = (habitScores[h.id] ?? 0) + 1;
+        }
+      }
+    }
+
+    // Best and worst habits
+    String? bestHabitId, worstHabitId;
+    int bestScore = -1, worstScore = 8;
+    for (final e in habitScores.entries) {
+      if (e.value > bestScore) { bestScore = e.value; bestHabitId = e.key; }
+      if (e.value < worstScore) { worstScore = e.value; worstHabitId = e.key; }
+    }
+    // Habits with 0 completions
+    for (final h in habits.where((h) => !h.archived)) {
+      if (!habitScores.containsKey(h.id)) {
+        worstHabitId = h.id;
+        worstScore = 0;
+      }
+    }
+
+    return {
+      'total': total,
+      'done': done,
+      'rate': total > 0 ? (done / total * 100).round() : 0,
+      'perfectDays': perfectDays,
+      'bestDay': bestDay,
+      'bestHabitId': bestHabitId,
+      'worstHabitId': worstHabitId,
+      'weekStart': _dateFmt.format(weekStart),
+      'weekEnd': _dateFmt.format(weekStart.add(const Duration(days: 6))),
+    };
+  }
+
+  String? getHabitName(String? id) {
+    if (id == null) return null;
+    try {
+      return habits.firstWhere((h) => h.id == id).name;
+    } catch (_) {
+      return null;
+    }
+  }
 
   String exportData() => jsonEncode({'habits': habits.map((e) => e.toJson()).toList(), 'completions': completions.map((e) => e.toJson()).toList(), 'activeMode': activeMode});
 

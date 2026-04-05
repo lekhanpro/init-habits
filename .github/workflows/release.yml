@@ -1,0 +1,69 @@
+name: Build & Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Create placeholder google-services.json
+        run: |
+          cat > android/app/google-services.json << 'GSEOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "init-habits-placeholder",
+              "storage_bucket": "init-habits-placeholder.appspot.com"
+            },
+            "client": [{
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": { "package_name": "com.habittracker" }
+              },
+              "oauth_client": [],
+              "api_key": [{ "current_key": "AIzaSyDUMMYKEYFORBUILDONLY000000000" }],
+              "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+            }],
+            "configuration_version": "1"
+          }
+          GSEOF
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: Rename APK
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/init-habits-${VERSION}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            flutter_app/build/app/outputs/flutter-apk/init-habits-*.apk
+            flutter_app/build/app/outputs/flutter-apk/app-release.apk

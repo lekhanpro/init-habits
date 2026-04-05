@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
+import 'services/reminder_service.dart';
 import 'stores/habit_store.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
@@ -24,6 +25,8 @@ void main() async {
   } catch (_) {
     // Firebase not configured — run without auth
   }
+
+  try { await ReminderService.init(); } catch (_) {}
 
   runApp(InitHabitsApp(firebaseReady: firebaseReady));
 }

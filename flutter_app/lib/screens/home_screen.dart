@@ -168,14 +168,85 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _showNoteDialog(BuildContext context, HabitStore store, Habit habit, String date) {
+    final completion = store.getCompletionForHabit(habit.id, date);
+    if (completion == null) return;
+    final controller = TextEditingController(text: completion.note ?? '');
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bgSecondary,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(8))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 20 + MediaQuery.of(ctx).viewInsets.bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('// note for "${habit.name}"', style: const TextStyle(color: AppColors.textTertiary, fontSize: 10)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLines: 3,
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
+              decoration: const InputDecoration(hintText: 'Add a note...'),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(ctx),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.borderPrimary),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text('cancel', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      store.updateCompletionNote(habit.id, date, controller.text.trim().isEmpty ? null : controller.text.trim());
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen.withValues(alpha: 0.15),
+                        border: Border.all(color: AppColors.accentGreen.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text('save', style: TextStyle(color: AppColors.accentGreen, fontSize: 12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHabitRow(BuildContext context, HabitStore store, Habit habit, String date) {
-    final isCompleted = store.getCompletionForHabit(habit.id, date) != null;
+    final completion = store.getCompletionForHabit(habit.id, date);
+    final isCompleted = completion != null;
     final color = Color(habit.colorValue);
     final streak = store.getStreakForHabit(habit.id);
     final isNegative = habit.type == HabitType.negative;
+    final hasNote = completion?.note != null && completion!.note!.isNotEmpty;
 
     return GestureDetector(
       onTap: () => store.toggleCompletion(habit.id, date),
+      onLongPress: isCompleted ? () => _showNoteDialog(context, store, habit, date) : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
@@ -196,16 +267,28 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(width: 10),
             // Name
             Expanded(
-              child: Text(
-                habit.name,
-                style: TextStyle(
-                  color: isCompleted ? AppColors.textTertiary : AppColors.textPrimary,
-                  fontSize: 12,
-                  decoration: isCompleted ? TextDecoration.lineThrough : null,
-                  decorationColor: AppColors.textTertiary,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    habit.name,
+                    style: TextStyle(
+                      color: isCompleted ? AppColors.textTertiary : AppColors.textPrimary,
+                      fontSize: 12,
+                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                      decorationColor: AppColors.textTertiary,
+                    ),
+                  ),
+                  if (hasNote)
+                    Text(completion!.note!, style: const TextStyle(color: AppColors.textTertiary, fontSize: 9), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
               ),
             ),
+            // Note indicator
+            if (hasNote) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.note_outlined, size: 10, color: AppColors.textTertiary),
+            ],
             // Type info
             if (habit.type == HabitType.timer && habit.targetMinutes != null)
               Text('${habit.targetMinutes}m', style: const TextStyle(color: AppColors.textTertiary, fontSize: 9)),

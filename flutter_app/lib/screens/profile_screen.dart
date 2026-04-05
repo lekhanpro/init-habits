@@ -2,12 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/mode.dart';
 import '../services/auth_service.dart';
+import '../services/reminder_service.dart';
 import '../stores/habit_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/terminal_header.dart';
+import 'weekly_review_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _reminderEnabled = false;
+  int _reminderHour = 8;
+  int _reminderMinute = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReminderSettings();
+  }
+
+  Future<void> _loadReminderSettings() async {
+    final enabled = await ReminderService.isEnabled();
+    final hour = await ReminderService.getHour();
+    final minute = await ReminderService.getMinute();
+    if (mounted) setState(() { _reminderEnabled = enabled; _reminderHour = hour; _reminderMinute = minute; });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +74,69 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
+              // Weekly Review
+              _actionRow(Icons.assessment_outlined, 'Weekly Review', '\$ review.weekly()', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const WeeklyReviewScreen()));
+              }, color: AppColors.accentBlue),
+              const SizedBox(height: 16),
+              // Reminder
+              const Text('// daily_reminder', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.bgSecondary,
+                  border: Border.all(color: AppColors.borderPrimary),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.notifications_outlined, size: 14, color: _reminderEnabled ? AppColors.accentGreen : AppColors.textTertiary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _reminderEnabled ? 'Reminder at ${_reminderHour.toString().padLeft(2, '0')}:${_reminderMinute.toString().padLeft(2, '0')}' : 'Reminder off',
+                            style: TextStyle(color: _reminderEnabled ? AppColors.textPrimary : AppColors.textSecondary, fontSize: 12),
+                          ),
+                          const Text('\$ cron.daily_reminder', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        if (!_reminderEnabled) {
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay(hour: _reminderHour, minute: _reminderMinute),
+                          );
+                          if (time != null) {
+                            setState(() { _reminderEnabled = true; _reminderHour = time.hour; _reminderMinute = time.minute; });
+                            await ReminderService.setReminder(true, time.hour, time.minute);
+                          }
+                        } else {
+                          setState(() => _reminderEnabled = false);
+                          await ReminderService.setReminder(false, _reminderHour, _reminderMinute);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _reminderEnabled ? AppColors.accentGreen.withValues(alpha: 0.15) : AppColors.bgTertiary,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _reminderEnabled ? 'ON' : 'OFF',
+                          style: TextStyle(color: _reminderEnabled ? AppColors.accentGreen : AppColors.textTertiary, fontSize: 10, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               // Modes
               const Text('// select_mode', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
               const SizedBox(height: 8),
@@ -81,7 +168,7 @@ class ProfileScreen extends StatelessWidget {
                 }, color: AppColors.accentRed),
               const SizedBox(height: 20),
               const Center(
-                child: Text('init.habits v1.1.0 — built with discipline', style: TextStyle(color: AppColors.textTertiary, fontSize: 9)),
+                child: Text('init.habits v1.0.0 — built with discipline', style: TextStyle(color: AppColors.textTertiary, fontSize: 9)),
               ),
             ],
           ),
