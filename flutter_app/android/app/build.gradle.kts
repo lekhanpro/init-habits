@@ -6,6 +6,12 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val keyPropertiesFile = rootProject.file("key.properties")
+val keyProperties = java.util.Properties()
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(keyPropertiesFile.inputStream())
+}
+
 android {
     namespace = "com.habittracker"
     compileSdk = flutter.compileSdkVersion
@@ -21,11 +27,17 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(keyProperties.getProperty("storeFile", "release.keystore"))
+            storePassword = keyProperties.getProperty("storePassword", "")
+            keyAlias = keyProperties.getProperty("keyAlias", "")
+            keyPassword = keyProperties.getProperty("keyPassword", "")
+        }
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.habittracker"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -34,9 +46,7 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
