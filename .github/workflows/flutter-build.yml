@@ -90,8 +90,22 @@ jobs:
           }
           EOF
 
+      - name: Create local.properties
+        run: |
+          FLUTTER_SDK=$(dirname $(dirname $(which flutter)))
+          echo "flutter.sdk=$FLUTTER_SDK" > android/local.properties
+          cat android/local.properties
+
       - name: Build release APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release || {
+            echo "=== BUILD FAILED ==="
+            echo "--- Gradle error log ---"
+            find android -name "*.log" -type f | head -5 | xargs -I{} sh -c 'echo "=== {} ==="; cat {}' 2>/dev/null || true
+            echo "--- Build output ---"
+            ls -la build/app/outputs/ 2>/dev/null || true
+            exit 1
+          }
 
       - name: Copy APK to flutter_app/app-release.apk
         run: |
