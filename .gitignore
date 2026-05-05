@@ -25,7 +25,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Release binaries
-*.apk
+# Release binaries (intermediate build outputs)
+flutter_app/build/
+# Keep the committed top-level release APK
+!flutter_app/app-release.apk
 *.aab
 *.ipa

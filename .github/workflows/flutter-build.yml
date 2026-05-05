@@ -49,9 +49,22 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
 
-      - name: Upload release APK
+      - name: Copy APK to repo root location
+        run: cp build/app/outputs/flutter-apk/app-release.apk app-release.apk
+
+      - name: Upload release APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: init-habits-release-apk
           path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+      - name: Commit updated APK back to branch
+        if: github.event_name == 'push'
+        run: |
+          cd ..
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add flutter_app/app-release.apk
+          git diff --cached --quiet || git commit -m "ci: update app-release.apk [skip ci]"
+          git push
