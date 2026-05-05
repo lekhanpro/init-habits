@@ -68,7 +68,7 @@ jobs:
 
       - name: Build release APK
         run: |
-          flutter build apk --release 2>&1 | tee build.log
+          flutter build apk --release --no-shrink 2>&1 | tee build.log
           exit ${PIPESTATUS[0]}
 
       - name: Upload build log on failure
