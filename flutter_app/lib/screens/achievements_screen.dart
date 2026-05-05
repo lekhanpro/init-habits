@@ -18,6 +18,18 @@ class AchievementsScreen extends StatelessWidget {
         return store.perfectDays;
       case AchievementMetric.habitsCreated:
         return store.habits.length;
+      case AchievementMetric.xpTotal:
+        return store.totalXp;
+      case AchievementMetric.currentStreak:
+        return store.currentStreak;
+      case AchievementMetric.totalDaysTracked:
+      case AchievementMetric.lateNightCompletions:
+      case AchievementMetric.earlyMorningDays:
+      case AchievementMetric.weekendCompletions:
+      case AchievementMetric.consecutivePerfectWeeks:
+      case AchievementMetric.hardHabitsCompleted:
+      case AchievementMetric.extremeHabitsCompleted:
+        return 0;
     }
   }
 
