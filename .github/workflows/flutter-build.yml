@@ -61,39 +61,14 @@ jobs:
           echo "flutter.sdk=$FLUTTER_SDK" > android/local.properties
           cat android/local.properties
 
-      - name: Generate placeholder google-services.json
+      - name: Verify google-services.json is present
         run: |
-          cat > android/app/google-services.json << 'EOF'
-          {
-            "project_info": {
-              "project_number": "123456789012",
-              "project_id": "init-habits-ci-placeholder",
-              "storage_bucket": "init-habits-ci-placeholder.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:123456789012:android:0000000000000000",
-                  "android_client_info": {
-                    "package_name": "com.habittracker"
-                  }
-                },
-                "oauth_client": [],
-                "api_key": [
-                  {
-                    "current_key": "AIzaSyDPlaceholderKeyForCIBuildOnly0000000"
-                  }
-                ],
-                "services": {
-                  "appinvite_service": {
-                    "other_platform_oauth_client": []
-                  }
-                }
-              }
-            ],
-            "configuration_version": "1"
-          }
-          EOF
+          if [ ! -f android/app/google-services.json ]; then
+            echo "::error::android/app/google-services.json missing — Firebase auth will not work in the built APK"
+            exit 1
+          fi
+          PROJECT_ID=$(grep -o '"project_id": *"[^"]*"' android/app/google-services.json | head -1)
+          echo "Using committed google-services.json ($PROJECT_ID)"
 
       - name: Build release APK
         run: |
