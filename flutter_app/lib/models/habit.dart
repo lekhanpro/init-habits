@@ -249,22 +249,52 @@ class Completion {
 }
 
 class JournalEntry {
+  final String id;
+  final String habitId;
   final String date; // yyyy-MM-dd
   final String text;
   final DateTime updatedAt;
+  final DateTime createdAt;
+  final String? mood; // happy|neutral|sad|frustrated|sick
+  final int? energy; // 1..5
 
-  JournalEntry({required this.date, required this.text, DateTime? updatedAt})
-      : updatedAt = updatedAt ?? DateTime.now();
+  JournalEntry({
+    String? id,
+    this.habitId = '',
+    required this.date,
+    required this.text,
+    DateTime? updatedAt,
+    DateTime? createdAt,
+    this.mood,
+    this.energy,
+  })  : id = id ?? '${date}_${DateTime.now().microsecondsSinceEpoch}',
+        updatedAt = updatedAt ?? DateTime.now(),
+        createdAt = createdAt ?? DateTime.now();
+
+  // Convenience: journal screens read `note` for the body text.
+  String? get note => text.isEmpty ? null : text;
 
   Map<String, dynamic> toJson() => {
+        'id': id,
+        'habitId': habitId,
         'date': date,
         'text': text,
         'updatedAt': updatedAt.toIso8601String(),
+        'createdAt': createdAt.toIso8601String(),
+        'mood': mood,
+        'energy': energy,
       };
 
   factory JournalEntry.fromJson(Map<String, dynamic> json) => JournalEntry(
+        id: json['id'],
+        habitId: json['habitId'] ?? '',
         date: json['date'],
         text: json['text'] ?? '',
         updatedAt: DateTime.parse(json['updatedAt']),
+        createdAt: json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'])
+            : DateTime.parse(json['updatedAt']),
+        mood: json['mood'],
+        energy: json['energy'] is int ? json['energy'] as int : null,
       );
 }

@@ -7,10 +7,15 @@ import '../services/auth_service.dart';
 import '../stores/habit_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/terminal_header.dart';
+import '../models/challenge.dart';
 import 'achievements_screen.dart';
 import 'chains_screen.dart';
+import 'challenges_screen.dart';
 import 'journal_screen.dart';
+import 'milestones_log_screen.dart';
+import 'pomodoro_screen.dart';
 import 'settings_screen.dart';
+import 'templates_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -123,6 +128,22 @@ class ProfileScreen extends StatelessWidget {
               _actionRow(Icons.link_rounded, 'Habit Chains',
                   '${store.chains.length} chains', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ChainsScreen()));
+              }),
+              _actionRow(Icons.dashboard_customize, 'Templates',
+                  r'$ templates.list()', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const TemplatesScreen()));
+              }),
+              _actionRow(Icons.flag_outlined, 'Milestones',
+                  '${store.milestonesLog.length} reached', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const MilestonesLogScreen()));
+              }),
+              _actionRow(Icons.flash_on, 'Challenges',
+                  '${store.challenges.where((c) => c.status == ChallengeStatus.active).length} active', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChallengesScreen()));
+              }),
+              _actionRow(Icons.timer_outlined, 'Pomodoro',
+                  r'$ pomodoro.run()', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const PomodoroScreen()));
               }),
               _actionRow(Icons.settings_outlined, 'Settings', r'$ settings.open()', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));

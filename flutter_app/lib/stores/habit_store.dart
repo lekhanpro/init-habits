@@ -9,6 +9,9 @@ import '../models/chain.dart';
 import '../models/mode.dart';
 import '../models/achievement.dart';
 import '../models/settings.dart';
+import '../models/milestone.dart';
+import '../models/challenge.dart';
+import '../data/habit_templates.dart';
 import '../services/notification_service.dart';
 
 const _uuid = Uuid();
@@ -41,6 +44,8 @@ class HabitStore extends ChangeNotifier {
   List<HabitChain> chains = [];
   Set<String> unlockedAchievements = {};
   Set<String> shownMilestones = {};
+  List<Milestone> milestonesLog = [];
+  List<Challenge> challenges = [];
   String selectedDate = _dateFmt.format(DateTime.now());
   String activeMode = 'standard';
   bool isDemo = true;
@@ -60,6 +65,8 @@ class HabitStore extends ChangeNotifier {
     final achJson = prefs.getString('achievements');
     final chainsJson = prefs.getString('chains');
     final milestonesJson = prefs.getString('shownMilestones');
+    final milestonesLogJson = prefs.getString('milestonesLog');
+    final challengesJson = prefs.getString('challenges');
     if (habitsJson != null) {
       habits = (jsonDecode(habitsJson) as List).map((e) => Habit.fromJson(e)).toList();
       completions = completionsJson != null
@@ -73,6 +80,12 @@ class HabitStore extends ChangeNotifier {
           : [];
       unlockedAchievements = achJson != null ? Set<String>.from(jsonDecode(achJson)) : {};
       shownMilestones = milestonesJson != null ? Set<String>.from(jsonDecode(milestonesJson)) : {};
+      milestonesLog = milestonesLogJson != null
+          ? (jsonDecode(milestonesLogJson) as List).map((e) => Milestone.fromJson(e)).toList()
+          : [];
+      challenges = challengesJson != null
+          ? (jsonDecode(challengesJson) as List).map((e) => Challenge.fromJson(e)).toList()
+          : [];
       activeMode = prefs.getString('activeMode') ?? 'standard';
       isDemo = prefs.getBool('isDemo') ?? false;
       notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
@@ -113,6 +126,8 @@ class HabitStore extends ChangeNotifier {
     await prefs.setString('chains', jsonEncode(chains.map((e) => e.toJson()).toList()));
     await prefs.setString('achievements', jsonEncode(unlockedAchievements.toList()));
     await prefs.setString('shownMilestones', jsonEncode(shownMilestones.toList()));
+    await prefs.setString('milestonesLog', jsonEncode(milestonesLog.map((m) => m.toJson()).toList()));
+    await prefs.setString('challenges', jsonEncode(challenges.map((c) => c.toJson()).toList()));
     await prefs.setString('activeMode', activeMode);
     await prefs.setBool('isDemo', isDemo);
     await prefs.setBool('notificationsEnabled', notificationsEnabled);
@@ -158,11 +173,78 @@ class HabitStore extends ChangeNotifier {
       completions.add(Completion(id: _uuid.v4(), habitId: habitId, date: date));
     }
     if (isDemo) isDemo = false;
-    if (!wasCompleted) _maybeAwardShield(habitId);
+    if (!wasCompleted) {
+      _maybeAwardShield(habitId);
+      final s = getStreakForHabit(habitId);
+      if (_defaultMilestoneTargets.contains(s)) {
+        _recordMilestone(habitId, s);
+      }
+    }
     _evaluateAchievements();
     _save();
     notifyListeners();
   }
+
+  // Install a built-in habit template (creates one habit per draft, in order).
+  void installTemplate(String templateId) {
+    final tpl = habitTemplates.firstWhere(
+      (t) => t.id == templateId,
+      orElse: () => throw StateError('unknown template: $templateId'),
+    );
+    for (final d in tpl.habits) {
+      habits.add(Habit(
+        id: _uuid.v4(),
+        name: d.name,
+        type: d.type,
+        section: d.section,
+        colorValue: d.colorValue,
+        icon: d.icon,
+        targetCount: d.targetCount,
+        targetMinutes: d.targetMinutes,
+        difficulty: d.difficulty,
+      ));
+    }
+    if (isDemo) isDemo = false;
+    _save();
+    notifyListeners();
+  }
+
+  // Start a new challenge tied to a habit.
+  void startChallenge({required String habitId, required int durationDays}) {
+    final now = DateTime.now();
+    challenges.add(Challenge(
+      id: _uuid.v4(),
+      habitId: habitId,
+      durationDays: durationDays,
+      startDate: now,
+      endDate: now.add(Duration(days: durationDays)),
+      status: ChallengeStatus.active,
+    ));
+    _save();
+    notifyListeners();
+  }
+
+  // Record a milestone hit (called when a per-habit streak crosses a target).
+  void _recordMilestone(String habitId, int count) {
+    final habit = habits.firstWhere(
+      (h) => h.id == habitId,
+      orElse: () => Habit(id: '', name: '', type: HabitType.boolean, section: HabitSection.custom, colorValue: 0),
+    );
+    if (habit.id.isEmpty) return;
+    final key = '${habitId}_$count';
+    if (shownMilestones.contains(key)) return;
+    shownMilestones.add(key);
+    milestonesLog.add(Milestone(
+      id: _uuid.v4(),
+      habitId: habitId,
+      habitName: habit.name,
+      count: count,
+      achievedAt: DateTime.now(),
+    ));
+  }
+
+  // Default per-habit milestone targets.
+  static const _defaultMilestoneTargets = [3, 7, 10, 14, 25, 30, 50, 100, 365];
 
   // Award shield when streak crosses 7/14/30 thresholds.
   void _maybeAwardShield(String habitId) {

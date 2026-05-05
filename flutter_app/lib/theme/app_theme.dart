@@ -345,6 +345,104 @@ const _tokyonightPalette = AppPalette(
   heatmap4: Color(0xFF9ECE6A),
 );
 
+const _catppuccinLattePalette = AppPalette(
+  bgPrimary: Color(0xFFEFF1F5),
+  bgSecondary: Color(0xFFE6E9EF),
+  bgTertiary: Color(0xFFDCE0E8),
+  bgInput: Color(0xFFE6E9EF),
+  borderPrimary: Color(0xFFCCD0DA),
+  borderSecondary: Color(0xFFBCC0CC),
+  textPrimary: Color(0xFF4C4F69),
+  textSecondary: Color(0xFF6C6F85),
+  textTertiary: Color(0xFF8C8FA1),
+  accentGreen: Color(0xFF40A02B),
+  accentYellow: Color(0xFFDF8E1D),
+  accentBlue: Color(0xFF1E66F5),
+  accentPurple: Color(0xFF8839EF),
+  accentRed: Color(0xFFD20F39),
+  accentCyan: Color(0xFF04A5E5),
+  accentOrange: Color(0xFFFE640B),
+  heatmap0: Color(0xFFE6E9EF),
+  heatmap1: Color(0xFFB7E4B7),
+  heatmap2: Color(0xFF7FCB7F),
+  heatmap3: Color(0xFF40A02B),
+  heatmap4: Color(0xFF2E7D1F),
+  brightness: Brightness.light,
+);
+
+const _catppuccinFrappePalette = AppPalette(
+  bgPrimary: Color(0xFF303446),
+  bgSecondary: Color(0xFF292C3C),
+  bgTertiary: Color(0xFF232634),
+  bgInput: Color(0xFF292C3C),
+  borderPrimary: Color(0xFF414559),
+  borderSecondary: Color(0xFF51576D),
+  textPrimary: Color(0xFFC6D0F5),
+  textSecondary: Color(0xFFA5ADCE),
+  textTertiary: Color(0xFF838BA7),
+  accentGreen: Color(0xFFA6D189),
+  accentYellow: Color(0xFFE5C890),
+  accentBlue: Color(0xFF8CAAEE),
+  accentPurple: Color(0xFFCA9EE6),
+  accentRed: Color(0xFFE78284),
+  accentCyan: Color(0xFF99D1DB),
+  accentOrange: Color(0xFFEF9F76),
+  heatmap0: Color(0xFF292C3C),
+  heatmap1: Color(0xFF3D4A3A),
+  heatmap2: Color(0xFF5F8C56),
+  heatmap3: Color(0xFFA6D189),
+  heatmap4: Color(0xFFCBE0B0),
+);
+
+const _catppuccinMacchiatoPalette = AppPalette(
+  bgPrimary: Color(0xFF24273A),
+  bgSecondary: Color(0xFF1E2030),
+  bgTertiary: Color(0xFF181926),
+  bgInput: Color(0xFF1E2030),
+  borderPrimary: Color(0xFF363A4F),
+  borderSecondary: Color(0xFF494D64),
+  textPrimary: Color(0xFFCAD3F5),
+  textSecondary: Color(0xFFA5ADCB),
+  textTertiary: Color(0xFF8087A2),
+  accentGreen: Color(0xFFA6DA95),
+  accentYellow: Color(0xFFEED49F),
+  accentBlue: Color(0xFF8AADF4),
+  accentPurple: Color(0xFFC6A0F6),
+  accentRed: Color(0xFFED8796),
+  accentCyan: Color(0xFF91D7E3),
+  accentOrange: Color(0xFFF5A97F),
+  heatmap0: Color(0xFF1E2030),
+  heatmap1: Color(0xFF3A4A38),
+  heatmap2: Color(0xFF5F8C56),
+  heatmap3: Color(0xFFA6DA95),
+  heatmap4: Color(0xFFCAE5BB),
+);
+
+const _solarizedLightPalette = AppPalette(
+  bgPrimary: Color(0xFFFDF6E3),
+  bgSecondary: Color(0xFFEEE8D5),
+  bgTertiary: Color(0xFFE0DABF),
+  bgInput: Color(0xFFEEE8D5),
+  borderPrimary: Color(0xFFCCC5B0),
+  borderSecondary: Color(0xFFAEA98D),
+  textPrimary: Color(0xFF073642),
+  textSecondary: Color(0xFF657B83),
+  textTertiary: Color(0xFF93A1A1),
+  accentGreen: Color(0xFF859900),
+  accentYellow: Color(0xFFB58900),
+  accentBlue: Color(0xFF268BD2),
+  accentPurple: Color(0xFF6C71C4),
+  accentRed: Color(0xFFDC322F),
+  accentCyan: Color(0xFF2AA198),
+  accentOrange: Color(0xFFCB4B16),
+  heatmap0: Color(0xFFEEE8D5),
+  heatmap1: Color(0xFFCCD8AE),
+  heatmap2: Color(0xFFA1B864),
+  heatmap3: Color(0xFF859900),
+  heatmap4: Color(0xFF6B7A00),
+  brightness: Brightness.light,
+);
+
 class ThemeController extends ChangeNotifier {
   AppThemeMode _mode = AppThemeMode.dark;
   bool _notificationsEnabled = true;
@@ -378,6 +476,14 @@ class ThemeController extends ChangeNotifier {
         return _oneDarkPalette;
       case AppThemeMode.tokyonight:
         return _tokyonightPalette;
+      case AppThemeMode.catppuccinLatte:
+        return _catppuccinLattePalette;
+      case AppThemeMode.catppuccinFrappe:
+        return _catppuccinFrappePalette;
+      case AppThemeMode.catppuccinMacchiato:
+        return _catppuccinMacchiatoPalette;
+      case AppThemeMode.solarizedLight:
+        return _solarizedLightPalette;
       case AppThemeMode.dark:
         return _darkPalette;
     }
@@ -396,6 +502,10 @@ class ThemeController extends ChangeNotifier {
     AppThemeMode.dracula: '🧛 dracula',
     AppThemeMode.oneDark: '🔵 one dark',
     AppThemeMode.tokyonight: '🌆 tokyo night',
+    AppThemeMode.catppuccinLatte: '☕ catppuccin latte',
+    AppThemeMode.catppuccinFrappe: '☕ catppuccin frappe',
+    AppThemeMode.catppuccinMacchiato: '☕ catppuccin macchiato',
+    AppThemeMode.solarizedLight: '🌞 solarized light',
   };
 
   ThemeController() {

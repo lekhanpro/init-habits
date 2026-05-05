@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../models/habit.dart';
 import '../stores/habit_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/terminal_header.dart';
@@ -13,150 +15,249 @@ class JournalScreen extends StatefulWidget {
 }
 
 class _JournalScreenState extends State<JournalScreen> {
-  late TextEditingController _controller;
-  late String _date;
-  String _lastLoadedDate = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    _controller = TextEditingController();
-  }
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void dispose() {
-    _saveIfDirty();
-    _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  void _saveIfDirty() {
-    final store = context.read<HabitStore>();
-    store.setJournalEntry(_date, _controller.text);
+  bool _matches(JournalEntry e, Habit? habit, String q) {
+    if (q.isEmpty) return true;
+    final lower = q.toLowerCase();
+    if ((e.note ?? '').toLowerCase().contains(lower)) return true;
+    if (habit != null && habit.name.toLowerCase().contains(lower)) return true;
+    if ((e.mood ?? '').toLowerCase().contains(lower)) return true;
+    if (e.energy != null && e.energy.toString() == q.trim()) return true;
+    return false;
   }
 
-  void _hydrate(HabitStore store) {
-    if (_lastLoadedDate == _date) return;
-    final entry = store.getJournalForDate(_date);
-    _controller.text = entry?.text ?? '';
-    _lastLoadedDate = _date;
+  Habit? _findHabit(HabitStore store, String habitId) {
+    for (final h in store.habits) {
+      if (h.id == habitId) return h;
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<HabitStore>();
-    _hydrate(store);
+    final journal = store.journal;
 
-    final entries = [...store.journal]..sort((a, b) => b.date.compareTo(a.date));
+    final entries = [...journal]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final filtered = entries.where((e) {
+      final h = _findHabit(store, e.habitId);
+      return _matches(e, h, _query);
+    }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
         child: Column(
           children: [
-            const TerminalHeader(command: 'journal.today()', showDate: false),
+            const TerminalHeader(command: 'cat journal.log', showDate: false),
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Row(children: [
-                    Icon(Icons.arrow_back, size: 14, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Text('back', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-                  ]),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Row(children: [
+                      Icon(Icons.arrow_back, size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        'back',
+                        style: GoogleFonts.jetBrainsMono(
+                            color: AppColors.textSecondary, fontSize: 11),
+                      ),
+                    ]),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.bgInput,
+                  border: Border.all(color: AppColors.borderPrimary),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                const Spacer(),
-                Text(DateFormat('EEE, MMM d').format(DateTime.parse(_date)),
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 12)),
-              ]),
+                child: Row(
+                  children: [
+                    Text(
+                      r'$ grep "',
+                      style: GoogleFonts.jetBrainsMono(
+                        color: AppColors.accentGreen,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _query = v),
+                        cursorColor: AppColors.accentGreen,
+                        style: GoogleFonts.jetBrainsMono(
+                          color: AppColors.textPrimary,
+                          fontSize: 12,
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
+                          hintText: 'keyword...',
+                          hintStyle: GoogleFonts.jetBrainsMono(
+                            color: AppColors.textTertiary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '" journal.log',
+                      style: GoogleFonts.jetBrainsMono(
+                        color: AppColors.accentGreen,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: TextField(
-                controller: _controller,
-                maxLines: 8,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 12),
-                decoration: InputDecoration(
-                  hintText: '> note for today...',
-                  hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 12),
-                ),
-                onChanged: (_) {},
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GestureDetector(
-                onTap: () {
-                  _saveIfDirty();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.bgSecondary,
-                      content: Text('saved.',
-                          style: TextStyle(color: AppColors.accentGreen, fontSize: 11)),
-                      duration: const Duration(milliseconds: 1200),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentGreen.withValues(alpha: 0.15),
-                    border: Border.all(color: AppColors.accentGreen.withValues(alpha: 0.3)),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(r'$ journal.save()',
-                      style: TextStyle(color: AppColors.accentGreen, fontSize: 12)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('// past_entries (${entries.length})',
-                    style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
+                child: Text(
+                  '${filtered.length} entries match',
+                  style: GoogleFonts.jetBrainsMono(
+                    color: AppColors.textTertiary,
+                    fontSize: 10,
+                  ),
+                ),
               ),
             ),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                itemCount: entries.length,
-                separatorBuilder: (_, __) =>
-                    Divider(color: AppColors.borderPrimary, height: 16),
-                itemBuilder: (_, i) {
-                  final e = entries[i];
-                  return GestureDetector(
-                    onTap: () {
-                      _saveIfDirty();
-                      setState(() {
-                        _date = e.date;
-                        _lastLoadedDate = '';
-                      });
-                    },
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(DateFormat('EEE, MMM d').format(DateTime.parse(e.date)),
-                          style: TextStyle(
-                              color: AppColors.accentGreen,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 4),
-                      Text(e.text,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-                    ]),
-                  );
-                },
-              ),
+              child: filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        'no entries match.',
+                        style: GoogleFonts.jetBrainsMono(
+                          color: AppColors.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) =>
+                          Divider(color: AppColors.borderPrimary, height: 16),
+                      itemBuilder: (_, i) {
+                        final e = filtered[i];
+                        final h = _findHabit(store, e.habitId);
+                        return _EntryRow(entry: e, habit: h);
+                      },
+                    ),
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+class _EntryRow extends StatelessWidget {
+  final JournalEntry entry;
+  final Habit? habit;
+
+  const _EntryRow({required this.entry, required this.habit});
+
+  static const Map<String, String> _moodEmoji = {
+    'happy': '😄',
+    'neutral': '😐',
+    'sad': '😔',
+    'frustrated': '😤',
+    'sick': '🤒',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final dateTime = DateFormat('yyyy-MM-dd HH:mm').format(entry.createdAt);
+    final habitName = habit?.name ?? entry.habitId;
+    final habitColor =
+        habit != null ? Color(habit!.colorValue) : AppColors.textSecondary;
+
+    final mood = entry.mood;
+    final energy = entry.energy;
+    final hasMoodOrEnergy = mood != null || energy != null;
+    final note = entry.note ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Row 1: date+time + habit name
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: '$dateTime  ',
+                style: GoogleFonts.jetBrainsMono(
+                  color: AppColors.textTertiary,
+                  fontSize: 10,
+                ),
+              ),
+              TextSpan(
+                text: habitName,
+                style: GoogleFonts.jetBrainsMono(
+                  color: habitColor,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (hasMoodOrEnergy) ...[
+          const SizedBox(height: 4),
+          Text(
+            _moodEnergyLine(mood, energy),
+            style: GoogleFonts.jetBrainsMono(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+            ),
+          ),
+        ],
+        if (note.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            note,
+            style: GoogleFonts.jetBrainsMono(
+              color: AppColors.textPrimary,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _moodEnergyLine(String? mood, int? energy) {
+    final parts = <String>[];
+    if (mood != null) {
+      parts.add(_moodEmoji[mood] ?? mood);
+    }
+    if (energy != null) {
+      final clamped = energy.clamp(0, 5);
+      final filled = '▮' * clamped;
+      final empty = '▯' * (5 - clamped);
+      parts.add('energy: [$filled$empty]');
+    }
+    return parts.join('  ');
   }
 }

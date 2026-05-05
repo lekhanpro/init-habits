@@ -11,6 +11,10 @@ enum AppThemeMode {
   dracula,
   oneDark,
   tokyonight,
+  catppuccinLatte,
+  catppuccinFrappe,
+  catppuccinMacchiato,
+  solarizedLight,
 }
 
 enum HapticsLevel { off, light, medium, strong }
