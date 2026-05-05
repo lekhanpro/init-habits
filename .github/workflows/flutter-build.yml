@@ -55,40 +55,10 @@ jobs:
         run: flutter test || true
         continue-on-error: true
 
-      - name: Create placeholder google-services.json
+      - name: Patch out Firebase plugin for CI build
         run: |
-          mkdir -p android/app
-          cat > android/app/google-services.json << 'EOF'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "placeholder-ci",
-              "storage_bucket": "placeholder-ci.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                  "android_client_info": {
-                    "package_name": "com.habittracker"
-                  }
-                },
-                "oauth_client": [],
-                "api_key": [
-                  {
-                    "current_key": "placeholder-key"
-                  }
-                ],
-                "services": {
-                  "appinvite_service": {
-                    "other_platform_oauth_client": []
-                  }
-                }
-              }
-            ],
-            "configuration_version": "1"
-          }
-          EOF
+          sed -i 's|id("com.google.gms.google-services")|// id("com.google.gms.google-services")|g' android/app/build.gradle.kts
+          sed -i 's|id("com.google.gms.google-services") version "4.4.2" apply false|// id("com.google.gms.google-services") version "4.4.2" apply false|g' android/settings.gradle.kts
 
       - name: Create local.properties
         run: |
