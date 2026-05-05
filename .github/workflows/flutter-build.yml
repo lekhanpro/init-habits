@@ -79,6 +79,18 @@ jobs:
           path: flutter_app/build.log
           if-no-files-found: ignore
 
+      - name: Commit build log on failure
+        if: failure()
+        run: |
+          cd ${{ github.workspace }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci-logs
+          cp flutter_app/build.log build-log.txt
+          git add build-log.txt
+          git commit -m "ci: build log $(date -u +%Y%m%d_%H%M%S) [skip ci]"
+          git push origin ci-logs --force
+
       - name: Copy APK to flutter_app/app-release.apk
         if: success()
         run: |
