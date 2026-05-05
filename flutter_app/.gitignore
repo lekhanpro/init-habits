@@ -44,6 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase config (contains API keys)
-android/app/google-services.json
+# google-services.json is intentionally committed.
+# Firebase Android client configs are NOT secret — the API key is
+# restricted to the package name + SHA-1 fingerprints registered in
+# the Firebase console, and ships inside every published APK anyway.
+# https://firebase.google.com/docs/projects/api-keys#api-keys-for-firebase-are-different
+# android/app/google-services.json
 
