@@ -2,6 +2,10 @@ enum HabitType { boolean, count, timer, negative }
 
 enum HabitSection { morning, deepWork, windDown, custom }
 
+enum HabitDifficulty { easy, normal, hard, extreme }
+
+enum FrequencyType { daily, xPerWeek, alternateDay, weekly, monthly }
+
 class SectionConfig {
   final String label;
   final String command;
@@ -31,8 +35,17 @@ class Habit {
   final bool archived;
   final DateTime createdAt;
   final DateTime updatedAt;
-  // reminder time-of-day in minutes-from-midnight, null = no reminder
   final int? reminderMinutes;
+  // --- v2 fields ---
+  final HabitDifficulty difficulty;
+  final FrequencyType frequencyType;
+  final int? frequencyTarget; // for xPerWeek: how many per week
+  final String? chainId;
+  final int chainOrder;
+  final int? timeWindowStart; // minutes from midnight
+  final int? timeWindowEnd;
+  final int shieldsRemaining;
+  final int shieldTier; // 0=none 1=bronze 2=silver 3=gold
 
   Habit({
     required this.id,
@@ -49,8 +62,30 @@ class Habit {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.reminderMinutes,
+    this.difficulty = HabitDifficulty.normal,
+    this.frequencyType = FrequencyType.daily,
+    this.frequencyTarget,
+    this.chainId,
+    this.chainOrder = 0,
+    this.timeWindowStart,
+    this.timeWindowEnd,
+    this.shieldsRemaining = 0,
+    this.shieldTier = 0,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  double get difficultyMultiplier {
+    switch (difficulty) {
+      case HabitDifficulty.easy:
+        return 0.5;
+      case HabitDifficulty.normal:
+        return 1.0;
+      case HabitDifficulty.hard:
+        return 1.5;
+      case HabitDifficulty.extreme:
+        return 2.0;
+    }
+  }
 
   Habit copyWith({
     String? name,
@@ -65,6 +100,17 @@ class Habit {
     bool? archived,
     int? reminderMinutes,
     bool clearReminder = false,
+    HabitDifficulty? difficulty,
+    FrequencyType? frequencyType,
+    int? frequencyTarget,
+    String? chainId,
+    bool clearChain = false,
+    int? chainOrder,
+    int? timeWindowStart,
+    int? timeWindowEnd,
+    bool clearTimeWindow = false,
+    int? shieldsRemaining,
+    int? shieldTier,
   }) =>
       Habit(
         id: id,
@@ -81,6 +127,15 @@ class Habit {
         createdAt: createdAt,
         updatedAt: DateTime.now(),
         reminderMinutes: clearReminder ? null : (reminderMinutes ?? this.reminderMinutes),
+        difficulty: difficulty ?? this.difficulty,
+        frequencyType: frequencyType ?? this.frequencyType,
+        frequencyTarget: frequencyTarget ?? this.frequencyTarget,
+        chainId: clearChain ? null : (chainId ?? this.chainId),
+        chainOrder: chainOrder ?? this.chainOrder,
+        timeWindowStart: clearTimeWindow ? null : (timeWindowStart ?? this.timeWindowStart),
+        timeWindowEnd: clearTimeWindow ? null : (timeWindowEnd ?? this.timeWindowEnd),
+        shieldsRemaining: shieldsRemaining ?? this.shieldsRemaining,
+        shieldTier: shieldTier ?? this.shieldTier,
       );
 
   Map<String, dynamic> toJson() => {
@@ -98,6 +153,15 @@ class Habit {
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
         'reminderMinutes': reminderMinutes,
+        'difficulty': difficulty.name,
+        'frequencyType': frequencyType.name,
+        'frequencyTarget': frequencyTarget,
+        'chainId': chainId,
+        'chainOrder': chainOrder,
+        'timeWindowStart': timeWindowStart,
+        'timeWindowEnd': timeWindowEnd,
+        'shieldsRemaining': shieldsRemaining,
+        'shieldTier': shieldTier,
       };
 
   factory Habit.fromJson(Map<String, dynamic> json) => Habit(
@@ -115,8 +179,26 @@ class Habit {
         createdAt: DateTime.parse(json['createdAt']),
         updatedAt: DateTime.parse(json['updatedAt']),
         reminderMinutes: json['reminderMinutes'],
+        difficulty: HabitDifficulty.values.firstWhere(
+          (e) => e.name == (json['difficulty'] ?? 'normal'),
+          orElse: () => HabitDifficulty.normal,
+        ),
+        frequencyType: FrequencyType.values.firstWhere(
+          (e) => e.name == (json['frequencyType'] ?? 'daily'),
+          orElse: () => FrequencyType.daily,
+        ),
+        frequencyTarget: json['frequencyTarget'],
+        chainId: json['chainId'],
+        chainOrder: json['chainOrder'] ?? 0,
+        timeWindowStart: json['timeWindowStart'],
+        timeWindowEnd: json['timeWindowEnd'],
+        shieldsRemaining: json['shieldsRemaining'] ?? 0,
+        shieldTier: json['shieldTier'] ?? 0,
       );
 }
+
+// mood: 0=😄 1=😐 2=😔 3=😤 4=🤒  energyLevel: 1-5
+const moodEmojis = ['😄', '😐', '😔', '😤', '🤒'];
 
 class Completion {
   final String id;
@@ -126,6 +208,8 @@ class Completion {
   final int? value;
   final String? note;
   final DateTime createdAt;
+  final int? mood; // 0-4
+  final int? energyLevel; // 1-5
 
   Completion({
     required this.id,
@@ -135,6 +219,8 @@ class Completion {
     this.value,
     this.note,
     DateTime? createdAt,
+    this.mood,
+    this.energyLevel,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -145,6 +231,8 @@ class Completion {
         'value': value,
         'note': note,
         'createdAt': createdAt.toIso8601String(),
+        'mood': mood,
+        'energyLevel': energyLevel,
       };
 
   factory Completion.fromJson(Map<String, dynamic> json) => Completion(
@@ -155,6 +243,8 @@ class Completion {
         value: json['value'],
         note: json['note'],
         createdAt: DateTime.parse(json['createdAt']),
+        mood: json['mood'],
+        energyLevel: json['energyLevel'],
       );
 }
 

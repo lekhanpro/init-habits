@@ -8,7 +8,9 @@ import '../stores/habit_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/terminal_header.dart';
 import 'achievements_screen.dart';
+import 'chains_screen.dart';
 import 'journal_screen.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -35,7 +37,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Wrap(spacing: 6, runSpacing: 4, children: [
-                _infoBadge('lv.${store.level}'),
+                _infoBadge('lv.${store.level} ${store.levelName}'),
                 _infoBadge('${store.totalXp} xp'),
                 _infoBadge('${store.activeHabits} habits'),
                 _infoBadge('${store.totalCompletions} done'),
@@ -59,13 +61,14 @@ class ProfileScreen extends StatelessWidget {
               // Theme switcher
               Text('// theme', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
               const SizedBox(height: 8),
-              Row(children: [
-                _themeChip(context, theme, AppThemeMode.dark, '🌑 dark'),
-                const SizedBox(width: 6),
-                _themeChip(context, theme, AppThemeMode.light, '☀️ light'),
-                const SizedBox(width: 6),
-                _themeChip(context, theme, AppThemeMode.coder, '💻 coder'),
-              ]),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: AppThemeMode.values.map((m) {
+                  final label = ThemeController.themeLabels[m] ?? m.name;
+                  return _themeChip(context, theme, m, label);
+                }).toList(),
+              ),
               const SizedBox(height: 20),
 
               // Notifications
@@ -114,8 +117,15 @@ class ProfileScreen extends StatelessWidget {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalScreen()));
               }),
               _actionRow(Icons.emoji_events_outlined, 'Achievements',
-                  '${store.unlockedAchievements.length} unlocked', () {
+                  '${store.unlockedAchievements.length} / 38 unlocked', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementsScreen()));
+              }),
+              _actionRow(Icons.link_rounded, 'Habit Chains',
+                  '${store.chains.length} chains', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChainsScreen()));
+              }),
+              _actionRow(Icons.settings_outlined, 'Settings', r'$ settings.open()', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
               }),
 
               const SizedBox(height: 12),
@@ -144,7 +154,7 @@ class ProfileScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
               Center(
-                child: Text('init.habits v1.2.0 — built with discipline',
+                child: Text('init.habits v2.0.0 — built with discipline',
                     style: TextStyle(color: AppColors.textTertiary, fontSize: 9)),
               ),
             ],
@@ -157,22 +167,19 @@ class ProfileScreen extends StatelessWidget {
   Widget _themeChip(BuildContext context, ThemeController theme, AppThemeMode mode, String label) {
     final selected = theme.mode == mode;
     final color = AppColors.accentGreen;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => theme.setMode(mode),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? color.withValues(alpha: 0.15) : AppColors.bgTertiary,
-            border: Border.all(
-                color: selected ? color.withValues(alpha: 0.4) : AppColors.borderPrimary),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          alignment: Alignment.center,
-          child: Text(label,
-              style: TextStyle(
-                  color: selected ? color : AppColors.textSecondary, fontSize: 11)),
+    return GestureDetector(
+      onTap: () => theme.setMode(mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.15) : AppColors.bgTertiary,
+          border: Border.all(
+              color: selected ? color.withValues(alpha: 0.4) : AppColors.borderPrimary),
+          borderRadius: BorderRadius.circular(4),
         ),
+        child: Text(label,
+            style: TextStyle(
+                color: selected ? color : AppColors.textSecondary, fontSize: 10)),
       ),
     );
   }

@@ -67,7 +67,45 @@ class HabitDetailScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     _stat('30d done', '$total', '', color),
                   ]),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  // Score bar
+                  Row(children: [
+                    Text('// habit_score: ',
+                        style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
+                    Text(store.habitScoreBar(habit.id),
+                        style: TextStyle(
+                            color: AppColors.accentGreen,
+                            fontSize: 10,
+                            letterSpacing: -1,
+                            fontFamily: 'monospace')),
+                  ]),
+                  const SizedBox(height: 8),
+                  // Difficulty + shield badges
+                  Row(children: [
+                    _badge(
+                      label: habit.difficulty.name,
+                      color: _difficultyColor(habit.difficulty),
+                    ),
+                    const SizedBox(width: 6),
+                    if (habit.shieldsRemaining > 0)
+                      _badge(
+                        label:
+                            '${'🛡' * habit.shieldsRemaining} shield${habit.shieldsRemaining > 1 ? 's' : ''}',
+                        color: AppColors.accentCyan,
+                      ),
+                    if (habit.chainId != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: _badge(label: '🔗 chained', color: AppColors.accentPurple),
+                      ),
+                  ]),
+                  const SizedBox(height: 8),
+                  // Sparkline: 14-day score history
+                  Text('// score_14d',
+                      style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
+                  const SizedBox(height: 4),
+                  _sparkline(store.habitScoreHistory(habit.id, days: 14), color),
+                  const SizedBox(height: 16),
                   Text('// trend_30d', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
                   const SizedBox(height: 8),
                   SizedBox(height: 140, child: _trend(history, color)),
@@ -80,6 +118,55 @@ class HabitDetailScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Color _difficultyColor(HabitDifficulty d) {
+    switch (d) {
+      case HabitDifficulty.easy:
+        return AppColors.accentBlue;
+      case HabitDifficulty.normal:
+        return AppColors.accentGreen;
+      case HabitDifficulty.hard:
+        return AppColors.accentYellow;
+      case HabitDifficulty.extreme:
+        return AppColors.accentRed;
+    }
+  }
+
+  Widget _badge({required String label, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Text(label, style: TextStyle(color: color, fontSize: 9)),
+    );
+  }
+
+  Widget _sparkline(List<double> scores, Color color) {
+    if (scores.isEmpty) return const SizedBox.shrink();
+    final max = scores.reduce((a, b) => a > b ? a : b).clamp(0.01, 1.0);
+    return SizedBox(
+      height: 36,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: scores.map((s) {
+          final h = (s / max * 36).clamp(2.0, 36.0);
+          return Expanded(
+            child: Container(
+              height: h,
+              margin: const EdgeInsets.symmetric(horizontal: 1),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

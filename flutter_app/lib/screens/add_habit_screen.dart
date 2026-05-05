@@ -24,6 +24,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   int? _targetMinutes;
   List<int> _schedule = [];
   TimeOfDay? _reminder;
+  HabitDifficulty _difficulty = HabitDifficulty.normal;
 
   static const _colorChoices = <int>[
     0xFF00FF9F,
@@ -49,6 +50,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     _targetCount = h?.targetCount;
     _targetMinutes = h?.targetMinutes;
     _schedule = List<int>.from(h?.schedule ?? []);
+    _difficulty = h?.difficulty ?? HabitDifficulty.normal;
     if (h?.reminderMinutes != null) {
       _reminder = TimeOfDay(hour: h!.reminderMinutes! ~/ 60, minute: h.reminderMinutes! % 60);
     }
@@ -78,6 +80,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         schedule: _schedule,
         reminderMinutes: reminderMinutes,
         clearReminder: reminderMinutes == null,
+        difficulty: _difficulty,
       );
       store.updateHabit(updated);
     } else {
@@ -91,6 +94,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         targetMinutes: _type == HabitType.timer ? _targetMinutes : null,
         schedule: _schedule,
         reminderMinutes: reminderMinutes,
+        difficulty: _difficulty,
       );
       store.addHabit(habit);
     }
@@ -302,6 +306,44 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   Text(
                     _schedule.isEmpty ? 'runs every day' : 'runs ${_schedule.length} day(s) per week',
                     style: TextStyle(color: AppColors.textTertiary, fontSize: 9),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('--difficulty', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    children: HabitDifficulty.values.map((d) {
+                      final labels = {
+                        HabitDifficulty.easy: '×0.5 easy',
+                        HabitDifficulty.normal: '×1.0 normal',
+                        HabitDifficulty.hard: '×1.5 hard',
+                        HabitDifficulty.extreme: '×2.0 extreme',
+                      };
+                      final colors = {
+                        HabitDifficulty.easy: AppColors.accentBlue,
+                        HabitDifficulty.normal: AppColors.accentGreen,
+                        HabitDifficulty.hard: AppColors.accentYellow,
+                        HabitDifficulty.extreme: AppColors.accentRed,
+                      };
+                      final sel = _difficulty == d;
+                      final col = colors[d]!;
+                      return GestureDetector(
+                        onTap: () => setState(() => _difficulty = d),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          margin: const EdgeInsets.only(bottom: 4),
+                          decoration: BoxDecoration(
+                            color: sel ? col.withValues(alpha: 0.15) : AppColors.bgTertiary,
+                            border: Border.all(
+                                color: sel ? col.withValues(alpha: 0.4) : AppColors.borderPrimary),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(labels[d]!,
+                              style: TextStyle(
+                                  color: sel ? col : AppColors.textSecondary, fontSize: 10)),
+                        ),
+                      );
+                    }).toList(),
                   ),
                   const SizedBox(height: 16),
                   Text('--reminder', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),

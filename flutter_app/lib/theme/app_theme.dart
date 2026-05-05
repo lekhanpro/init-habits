@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -128,6 +129,222 @@ const _coderPalette = AppPalette(
   heatmap4: Color(0xFF00FF41),
 );
 
+const _synthwavePalette = AppPalette(
+  bgPrimary: Color(0xFF0D0221),
+  bgSecondary: Color(0xFF150432),
+  bgTertiary: Color(0xFF1E0845),
+  bgInput: Color(0xFF0A0118),
+  borderPrimary: Color(0xFF2D0860),
+  borderSecondary: Color(0xFF3F0F80),
+  textPrimary: Color(0xFFFFE4F5),
+  textSecondary: Color(0xFFCC88BB),
+  textTertiary: Color(0xFF884477),
+  accentGreen: Color(0xFF05FFA1),
+  accentYellow: Color(0xFFFFE600),
+  accentBlue: Color(0xFF00C6FF),
+  accentPurple: Color(0xFFCC44FF),
+  accentRed: Color(0xFFFF2D6E),
+  accentCyan: Color(0xFF00F5FF),
+  accentOrange: Color(0xFFFF6B35),
+  heatmap0: Color(0xFF1E0845),
+  heatmap1: Color(0xFF4A0A6B),
+  heatmap2: Color(0xFF8B0FAA),
+  heatmap3: Color(0xFFCC44FF),
+  heatmap4: Color(0xFFFF00FF),
+);
+
+const _matrixPalette = AppPalette(
+  bgPrimary: Color(0xFF000000),
+  bgSecondary: Color(0xFF001400),
+  bgTertiary: Color(0xFF001A00),
+  bgInput: Color(0xFF000A00),
+  borderPrimary: Color(0xFF003300),
+  borderSecondary: Color(0xFF004400),
+  textPrimary: Color(0xFF00FF41),
+  textSecondary: Color(0xFF00AA2B),
+  textTertiary: Color(0xFF005517),
+  accentGreen: Color(0xFF00FF41),
+  accentYellow: Color(0xFF66FF00),
+  accentBlue: Color(0xFF00FFAA),
+  accentPurple: Color(0xFF00FF88),
+  accentRed: Color(0xFFFF2200),
+  accentCyan: Color(0xFF00FFDD),
+  accentOrange: Color(0xFF88FF00),
+  heatmap0: Color(0xFF001400),
+  heatmap1: Color(0xFF003A00),
+  heatmap2: Color(0xFF006600),
+  heatmap3: Color(0xFF00AA00),
+  heatmap4: Color(0xFF00FF41),
+);
+
+const _solarizedPalette = AppPalette(
+  bgPrimary: Color(0xFF002B36),
+  bgSecondary: Color(0xFF073642),
+  bgTertiary: Color(0xFF094555),
+  bgInput: Color(0xFF001F28),
+  borderPrimary: Color(0xFF0D5265),
+  borderSecondary: Color(0xFF126277),
+  textPrimary: Color(0xFFEEE8D5),
+  textSecondary: Color(0xFF93A1A1),
+  textTertiary: Color(0xFF657B83),
+  accentGreen: Color(0xFF859900),
+  accentYellow: Color(0xFFB58900),
+  accentBlue: Color(0xFF268BD2),
+  accentPurple: Color(0xFF6C71C4),
+  accentRed: Color(0xFFDC322F),
+  accentCyan: Color(0xFF2AA198),
+  accentOrange: Color(0xFFCB4B16),
+  heatmap0: Color(0xFF073642),
+  heatmap1: Color(0xFF0B4A39),
+  heatmap2: Color(0xFF1A6B3C),
+  heatmap3: Color(0xFF4F8C3F),
+  heatmap4: Color(0xFF859900),
+);
+
+const _gruvboxPalette = AppPalette(
+  bgPrimary: Color(0xFF282828),
+  bgSecondary: Color(0xFF32302F),
+  bgTertiary: Color(0xFF3C3836),
+  bgInput: Color(0xFF1D2021),
+  borderPrimary: Color(0xFF504945),
+  borderSecondary: Color(0xFF665C54),
+  textPrimary: Color(0xFFEBDBB2),
+  textSecondary: Color(0xFFBDAE93),
+  textTertiary: Color(0xFF928374),
+  accentGreen: Color(0xFFB8BB26),
+  accentYellow: Color(0xFFFABD2F),
+  accentBlue: Color(0xFF83A598),
+  accentPurple: Color(0xFFD3869B),
+  accentRed: Color(0xFFFB4934),
+  accentCyan: Color(0xFF8EC07C),
+  accentOrange: Color(0xFFFE8019),
+  heatmap0: Color(0xFF3C3836),
+  heatmap1: Color(0xFF4A5C22),
+  heatmap2: Color(0xFF6A7F28),
+  heatmap3: Color(0xFF98A12A),
+  heatmap4: Color(0xFFB8BB26),
+);
+
+const _catppuccinMochaPalette = AppPalette(
+  bgPrimary: Color(0xFF1E1E2E),
+  bgSecondary: Color(0xFF181825),
+  bgTertiary: Color(0xFF313244),
+  bgInput: Color(0xFF11111B),
+  borderPrimary: Color(0xFF45475A),
+  borderSecondary: Color(0xFF585B70),
+  textPrimary: Color(0xFFCDD6F4),
+  textSecondary: Color(0xFFBAC2DE),
+  textTertiary: Color(0xFF9399B2),
+  accentGreen: Color(0xFFA6E3A1),
+  accentYellow: Color(0xFFF9E2AF),
+  accentBlue: Color(0xFF89B4FA),
+  accentPurple: Color(0xFFCBA6F7),
+  accentRed: Color(0xFFF38BA8),
+  accentCyan: Color(0xFF89DCEB),
+  accentOrange: Color(0xFFFAB387),
+  heatmap0: Color(0xFF313244),
+  heatmap1: Color(0xFF264738),
+  heatmap2: Color(0xFF3A6B50),
+  heatmap3: Color(0xFF6DA882),
+  heatmap4: Color(0xFFA6E3A1),
+);
+
+const _nordPalette = AppPalette(
+  bgPrimary: Color(0xFF2E3440),
+  bgSecondary: Color(0xFF3B4252),
+  bgTertiary: Color(0xFF434C5E),
+  bgInput: Color(0xFF242933),
+  borderPrimary: Color(0xFF4C566A),
+  borderSecondary: Color(0xFF5E6779),
+  textPrimary: Color(0xFFECEFF4),
+  textSecondary: Color(0xFFD8DEE9),
+  textTertiary: Color(0xFF8892A0),
+  accentGreen: Color(0xFFA3BE8C),
+  accentYellow: Color(0xFFEBCB8B),
+  accentBlue: Color(0xFF81A1C1),
+  accentPurple: Color(0xFFB48EAD),
+  accentRed: Color(0xFFBF616A),
+  accentCyan: Color(0xFF88C0D0),
+  accentOrange: Color(0xFFD08770),
+  heatmap0: Color(0xFF434C5E),
+  heatmap1: Color(0xFF3A5C42),
+  heatmap2: Color(0xFF4D7A58),
+  heatmap3: Color(0xFF6EA07D),
+  heatmap4: Color(0xFFA3BE8C),
+);
+
+const _draculaPalette = AppPalette(
+  bgPrimary: Color(0xFF282A36),
+  bgSecondary: Color(0xFF1E1F29),
+  bgTertiary: Color(0xFF343746),
+  bgInput: Color(0xFF191A23),
+  borderPrimary: Color(0xFF44475A),
+  borderSecondary: Color(0xFF565970),
+  textPrimary: Color(0xFFF8F8F2),
+  textSecondary: Color(0xFFBDBDBF),
+  textTertiary: Color(0xFF6272A4),
+  accentGreen: Color(0xFF50FA7B),
+  accentYellow: Color(0xFFF1FA8C),
+  accentBlue: Color(0xFF6272A4),
+  accentPurple: Color(0xFFBD93F9),
+  accentRed: Color(0xFFFF5555),
+  accentCyan: Color(0xFF8BE9FD),
+  accentOrange: Color(0xFFFFB86C),
+  heatmap0: Color(0xFF343746),
+  heatmap1: Color(0xFF264038),
+  heatmap2: Color(0xFF2D6040),
+  heatmap3: Color(0xFF3A9957),
+  heatmap4: Color(0xFF50FA7B),
+);
+
+const _oneDarkPalette = AppPalette(
+  bgPrimary: Color(0xFF282C34),
+  bgSecondary: Color(0xFF21252B),
+  bgTertiary: Color(0xFF2C313C),
+  bgInput: Color(0xFF1B1F27),
+  borderPrimary: Color(0xFF3E4452),
+  borderSecondary: Color(0xFF4B5263),
+  textPrimary: Color(0xFFABB2BF),
+  textSecondary: Color(0xFF818896),
+  textTertiary: Color(0xFF5C6370),
+  accentGreen: Color(0xFF98C379),
+  accentYellow: Color(0xFFE5C07B),
+  accentBlue: Color(0xFF61AFEF),
+  accentPurple: Color(0xFFC678DD),
+  accentRed: Color(0xFFE06C75),
+  accentCyan: Color(0xFF56B6C2),
+  accentOrange: Color(0xFFD19A66),
+  heatmap0: Color(0xFF2C313C),
+  heatmap1: Color(0xFF2A4228),
+  heatmap2: Color(0xFF3B6235),
+  heatmap3: Color(0xFF618C5A),
+  heatmap4: Color(0xFF98C379),
+);
+
+const _tokyonightPalette = AppPalette(
+  bgPrimary: Color(0xFF1A1B26),
+  bgSecondary: Color(0xFF16161E),
+  bgTertiary: Color(0xFF1F2335),
+  bgInput: Color(0xFF13131B),
+  borderPrimary: Color(0xFF292E42),
+  borderSecondary: Color(0xFF3B4261),
+  textPrimary: Color(0xFFC0CAF5),
+  textSecondary: Color(0xFF9AACDB),
+  textTertiary: Color(0xFF565F89),
+  accentGreen: Color(0xFF9ECE6A),
+  accentYellow: Color(0xFFE0AF68),
+  accentBlue: Color(0xFF7AA2F7),
+  accentPurple: Color(0xFFBB9AF7),
+  accentRed: Color(0xFFF7768E),
+  accentCyan: Color(0xFF7DCFFF),
+  accentOrange: Color(0xFFFF9E64),
+  heatmap0: Color(0xFF1F2335),
+  heatmap1: Color(0xFF1E3B2A),
+  heatmap2: Color(0xFF2A5C3A),
+  heatmap3: Color(0xFF4A8C5A),
+  heatmap4: Color(0xFF9ECE6A),
+);
+
 class ThemeController extends ChangeNotifier {
   AppThemeMode _mode = AppThemeMode.dark;
   bool _notificationsEnabled = true;
@@ -143,10 +360,43 @@ class ThemeController extends ChangeNotifier {
         return _lightPalette;
       case AppThemeMode.coder:
         return _coderPalette;
+      case AppThemeMode.synthwave:
+        return _synthwavePalette;
+      case AppThemeMode.matrix:
+        return _matrixPalette;
+      case AppThemeMode.solarized:
+        return _solarizedPalette;
+      case AppThemeMode.gruvbox:
+        return _gruvboxPalette;
+      case AppThemeMode.catppuccinMocha:
+        return _catppuccinMochaPalette;
+      case AppThemeMode.nord:
+        return _nordPalette;
+      case AppThemeMode.dracula:
+        return _draculaPalette;
+      case AppThemeMode.oneDark:
+        return _oneDarkPalette;
+      case AppThemeMode.tokyonight:
+        return _tokyonightPalette;
       case AppThemeMode.dark:
         return _darkPalette;
     }
   }
+
+  static const themeLabels = {
+    AppThemeMode.dark: '🌑 dark',
+    AppThemeMode.light: '☀️ light',
+    AppThemeMode.coder: '💻 coder',
+    AppThemeMode.synthwave: '🌊 synthwave',
+    AppThemeMode.matrix: '🐇 matrix',
+    AppThemeMode.solarized: '🌤 solarized',
+    AppThemeMode.gruvbox: '🪵 gruvbox',
+    AppThemeMode.catppuccinMocha: '☕ catppuccin',
+    AppThemeMode.nord: '❄️ nord',
+    AppThemeMode.dracula: '🧛 dracula',
+    AppThemeMode.oneDark: '🔵 one dark',
+    AppThemeMode.tokyonight: '🌆 tokyo night',
+  };
 
   ThemeController() {
     _boot();
@@ -183,7 +433,7 @@ class ThemeController extends ChangeNotifier {
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
     final s = AppSettings(theme: _mode, notificationsEnabled: _notificationsEnabled);
-    await prefs.setString('appSettings', _encode(s.toJson()));
+    await prefs.setString('appSettings', jsonEncode(s.toJson()));
   }
 
   void _applySystemUi() {
@@ -197,23 +447,25 @@ class ThemeController extends ChangeNotifier {
     ));
   }
 
-  String _encode(Map<String, dynamic> m) =>
-      m.entries.map((e) => '${e.key}=${e.value}').join('&');
-
   Map<String, dynamic> _decode(String s) {
-    final map = <String, dynamic>{};
-    for (final part in s.split('&')) {
-      final i = part.indexOf('=');
-      if (i < 0) continue;
-      final k = part.substring(0, i);
-      final v = part.substring(i + 1);
-      if (v == 'true' || v == 'false') {
-        map[k] = v == 'true';
-      } else {
-        map[k] = v;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(s));
+    } catch (_) {
+      // legacy key=value format
+      final map = <String, dynamic>{};
+      for (final part in s.split('&')) {
+        final i = part.indexOf('=');
+        if (i < 0) continue;
+        final k = part.substring(0, i);
+        final v = part.substring(i + 1);
+        if (v == 'true' || v == 'false') {
+          map[k] = v == 'true';
+        } else {
+          map[k] = v;
+        }
       }
+      return map;
     }
-    return map;
   }
 }
 

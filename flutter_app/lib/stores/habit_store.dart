@@ -5,27 +5,48 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/habit.dart';
+import '../models/chain.dart';
 import '../models/mode.dart';
 import '../models/achievement.dart';
+import '../models/settings.dart';
 import '../services/notification_service.dart';
 
 const _uuid = Uuid();
 final _dateFmt = DateFormat('yyyy-MM-dd');
 
 const int _xpPerCompletion = 10;
-const int _xpPerStreakBonus = 5; // bonus for streak >= 7
-const int _xpPerLevel = 100;
+const int _xpPerStreakBonus = 5;
+const int _xpPerLevel = 200; // raised from 100
+
+// Loop Habit Tracker EMA alpha: converges to 1 after ~13 days
+const double _scoreAlpha = 1 - 0.0513; // 1 - 0.5^(1/13)
+
+const _levelNames = [
+  'Initiate',
+  'Apprentice',
+  'Journeyman',
+  'Specialist',
+  'Expert',
+  'Master',
+  'Grandmaster',
+  'Legend',
+  'Transcendent',
+  '[REDACTED]',
+];
 
 class HabitStore extends ChangeNotifier {
   List<Habit> habits = [];
   List<Completion> completions = [];
   List<JournalEntry> journal = [];
+  List<HabitChain> chains = [];
   Set<String> unlockedAchievements = {};
+  Set<String> shownMilestones = {};
   String selectedDate = _dateFmt.format(DateTime.now());
   String activeMode = 'standard';
   bool isDemo = true;
   bool hasBooted = false;
   bool notificationsEnabled = true;
+  int gracePeriodHours = 0; // 0-3h: completions before this hour count for prev day
 
   HabitStore() {
     _boot();
@@ -37,6 +58,8 @@ class HabitStore extends ChangeNotifier {
     final completionsJson = prefs.getString('completions');
     final journalJson = prefs.getString('journal');
     final achJson = prefs.getString('achievements');
+    final chainsJson = prefs.getString('chains');
+    final milestonesJson = prefs.getString('shownMilestones');
     if (habitsJson != null) {
       habits = (jsonDecode(habitsJson) as List).map((e) => Habit.fromJson(e)).toList();
       completions = completionsJson != null
@@ -45,16 +68,20 @@ class HabitStore extends ChangeNotifier {
       journal = journalJson != null
           ? (jsonDecode(journalJson) as List).map((e) => JournalEntry.fromJson(e)).toList()
           : [];
+      chains = chainsJson != null
+          ? (jsonDecode(chainsJson) as List).map((e) => HabitChain.fromJson(e)).toList()
+          : [];
       unlockedAchievements = achJson != null ? Set<String>.from(jsonDecode(achJson)) : {};
+      shownMilestones = milestonesJson != null ? Set<String>.from(jsonDecode(milestonesJson)) : {};
       activeMode = prefs.getString('activeMode') ?? 'standard';
       isDemo = prefs.getBool('isDemo') ?? false;
       notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
+      gracePeriodHours = prefs.getInt('gracePeriodHours') ?? 0;
     } else {
       _loadDemoData();
     }
     hasBooted = true;
     notifyListeners();
-    // Re-arm notifications on boot.
     await NotificationService.instance.rescheduleAll(habits, enabled: notificationsEnabled);
   }
 
@@ -83,10 +110,13 @@ class HabitStore extends ChangeNotifier {
     await prefs.setString('habits', jsonEncode(habits.map((e) => e.toJson()).toList()));
     await prefs.setString('completions', jsonEncode(completions.map((e) => e.toJson()).toList()));
     await prefs.setString('journal', jsonEncode(journal.map((e) => e.toJson()).toList()));
+    await prefs.setString('chains', jsonEncode(chains.map((e) => e.toJson()).toList()));
     await prefs.setString('achievements', jsonEncode(unlockedAchievements.toList()));
+    await prefs.setString('shownMilestones', jsonEncode(shownMilestones.toList()));
     await prefs.setString('activeMode', activeMode);
     await prefs.setBool('isDemo', isDemo);
     await prefs.setBool('notificationsEnabled', notificationsEnabled);
+    await prefs.setInt('gracePeriodHours', gracePeriodHours);
   }
 
   void setSelectedDate(String date) {
@@ -384,42 +414,72 @@ class HabitStore extends ChangeNotifier {
     return due.take(limit).toList();
   }
 
-  // --- XP / Level ---
+  // --- XP / Level 2.0 ---
   int get totalXp {
     int xp = 0;
-    xp += totalCompletions * _xpPerCompletion;
-    // bonus per habit's best streak if >=7
-    for (final h in habits) {
-      final s = getBestStreakForHabit(h.id);
-      if (s >= 7) xp += s * _xpPerStreakBonus;
+    for (final c in completions.where((c) => c.completed)) {
+      final habit = habits.firstWhere(
+        (h) => h.id == c.habitId,
+        orElse: () => Habit(id: '', name: '', type: HabitType.boolean, section: HabitSection.custom, colorValue: 0),
+      );
+      final diffMult = habit.difficultyMultiplier;
+      final streak = getStreakForHabit(c.habitId);
+      final streakMult = (1.0 + (streak ~/ 7) * 0.05).clamp(1.0, 2.0);
+      xp += (_xpPerCompletion * diffMult * streakMult).round();
     }
     return xp;
   }
 
-  int get level => 1 + (totalXp ~/ _xpPerLevel);
+  int get level => (_levelNames.length - 1).clamp(0, (totalXp ~/ _xpPerLevel).clamp(0, _levelNames.length - 1));
+  String get levelName => _levelNames[level.clamp(0, _levelNames.length - 1)];
   int get xpIntoLevel => totalXp % _xpPerLevel;
   int get xpForNextLevel => _xpPerLevel;
+  double get xpProgress => xpIntoLevel / _xpPerLevel;
 
   // --- Achievements ---
   void _evaluateAchievements() {
-    int habitsCreated = habits.length;
+    final now = DateTime.now();
+    int lateNight = 0, earlyMorning = 0, weekendDone = 0;
+    int hardDone = 0, extremeDone = 0;
+    final earlyDates = <String>{};
+
+    for (final c in completions.where((c) => c.completed)) {
+      final hour = c.createdAt.hour;
+      if (hour >= 23 || hour < 3) lateNight++;
+      if (hour < 6) earlyDates.add(c.date);
+      final wd = DateTime.parse(c.date).weekday;
+      if (wd == 6 || wd == 7) weekendDone++;
+      final h = habits.firstWhere((h) => h.id == c.habitId,
+          orElse: () => Habit(id: '', name: '', type: HabitType.boolean, section: HabitSection.custom, colorValue: 0));
+      if (h.difficulty == HabitDifficulty.hard) hardDone++;
+      if (h.difficulty == HabitDifficulty.extreme) extremeDone++;
+    }
+
+    for (int d = 6; d >= 0; d--) {
+      final ds = _dateFmt.format(now.subtract(Duration(days: d)));
+      final c = completions.where((c) => c.date == ds && c.completed && c.createdAt.hour < 6).length;
+      if (c > 0) earlyMorning++;
+    }
+
+    final metrics = {
+      AchievementMetric.totalCompletions: totalCompletions,
+      AchievementMetric.bestStreak: bestStreak,
+      AchievementMetric.perfectDays: perfectDays,
+      AchievementMetric.habitsCreated: habits.length,
+      AchievementMetric.xpTotal: totalXp,
+      AchievementMetric.currentStreak: currentStreak,
+      AchievementMetric.totalDaysTracked: daysTracked(),
+      AchievementMetric.lateNightCompletions: lateNight,
+      AchievementMetric.earlyMorningDays: earlyMorning,
+      AchievementMetric.weekendCompletions: weekendDone,
+      AchievementMetric.consecutivePerfectWeeks: 0,
+      AchievementMetric.hardHabitsCompleted: hardDone,
+      AchievementMetric.extremeHabitsCompleted: extremeDone,
+    };
+
     for (final ach in allAchievements) {
       if (unlockedAchievements.contains(ach.id)) continue;
-      int value;
-      switch (ach.metric) {
-        case AchievementMetric.totalCompletions:
-          value = totalCompletions;
-          break;
-        case AchievementMetric.bestStreak:
-          value = bestStreak;
-          break;
-        case AchievementMetric.perfectDays:
-          value = perfectDays;
-          break;
-        case AchievementMetric.habitsCreated:
-          value = habitsCreated;
-          break;
-      }
+      final value = metrics[ach.metric] ?? 0;
       if (value >= ach.threshold) {
         unlockedAchievements.add(ach.id);
       }
@@ -434,11 +494,259 @@ class HabitStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Export ---
+  Future<void> setGracePeriodHours(int hours) async {
+    gracePeriodHours = hours.clamp(0, 3);
+    _save();
+    notifyListeners();
+  }
+
+  // --- Habit Score (Loop Habit Tracker EMA algorithm) ---
+  // Returns 0.0 - 1.0; converges to 1 after ~13 perfect days
+  double habitScore(String habitId, {int days = 90}) {
+    double score = 0.0;
+    final now = DateTime.now();
+    for (int d = days - 1; d >= 0; d--) {
+      final dateStr = _dateFmt.format(now.subtract(Duration(days: d)));
+      final due = dueHabitsForDate(dateStr).any((h) => h.id == habitId);
+      if (!due) continue;
+      final done = getCompletionForHabit(habitId, dateStr) != null ? 1.0 : 0.0;
+      score = score * (1 - _scoreAlpha) + done * _scoreAlpha;
+    }
+    return score;
+  }
+
+  // Last [days] daily scores for sparkline
+  List<double> habitScoreHistory(String habitId, {int days = 14}) {
+    final now = DateTime.now();
+    double score = habitScore(habitId, days: 90 + days);
+    final result = <double>[];
+    for (int d = days - 1; d >= 0; d--) {
+      final dateStr = _dateFmt.format(now.subtract(Duration(days: d)));
+      final due = dueHabitsForDate(dateStr).any((h) => h.id == habitId);
+      if (due) {
+        final done = getCompletionForHabit(habitId, dateStr) != null ? 1.0 : 0.0;
+        score = score * (1 - _scoreAlpha) + done * _scoreAlpha;
+      }
+      result.add(score);
+    }
+    return result;
+  }
+
+  String habitScoreBar(String habitId) {
+    final score = habitScore(habitId);
+    final filled = (score * 10).round();
+    return '[${('█' * filled).padRight(10, '░')}] ${(score * 100).round()}%';
+  }
+
+  // --- Predictive Insights ---
+  String get predictedStreakDays {
+    if (currentStreak == 0) return '—';
+    final score = habits.isEmpty ? 0.0 : habits
+        .where((h) => !h.archived)
+        .map((h) => habitScore(h.id))
+        .fold(0.0, (a, b) => a + b) /
+        habits.where((h) => !h.archived).length;
+    if (score < 0.3) return '—';
+    final daysTo30 = ((30 - currentStreak) / score).round();
+    return daysTo30 > 0 ? '~$daysTo30 days to 30-day streak' : 'You\'re on track!';
+  }
+
+  String get weakestHabitThisWeek {
+    final active = habits.where((h) => !h.archived).toList();
+    if (active.isEmpty) return '—';
+    final now = DateTime.now();
+    Habit? weakest;
+    double minRate = double.infinity;
+    for (final h in active) {
+      int total = 0, done = 0;
+      for (int d = 0; d < 7; d++) {
+        final ds = _dateFmt.format(now.subtract(Duration(days: d)));
+        if (dueHabitsForDate(ds).any((x) => x.id == h.id)) {
+          total++;
+          if (getCompletionForHabit(h.id, ds) != null) done++;
+        }
+      }
+      if (total > 0) {
+        final rate = done / total;
+        if (rate < minRate) {
+          minRate = rate;
+          weakest = h;
+        }
+      }
+    }
+    return weakest?.name ?? '—';
+  }
+
+  String get bestPerformanceWindow {
+    final counts = {'morning': 0, 'afternoon': 0, 'evening': 0};
+    for (final c in completions.where((c) => c.completed)) {
+      final h = c.createdAt.hour;
+      if (h >= 5 && h < 12) counts['morning'] = counts['morning']! + 1;
+      else if (h >= 12 && h < 17) counts['afternoon'] = counts['afternoon']! + 1;
+      else counts['evening'] = counts['evening']! + 1;
+    }
+    if (counts.values.every((v) => v == 0)) return '—';
+    return counts.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+  }
+
+  String get weekdayVsWeekendRatio {
+    final wd = weekdayAvg();
+    final we = weekendAvg();
+    if (we == 0) return '—';
+    final ratio = (wd / we);
+    if (ratio > 1) return '${ratio.toStringAsFixed(1)}× more consistent on weekdays';
+    if (ratio < 1) return '${(1 / ratio).toStringAsFixed(1)}× more consistent on weekends';
+    return 'Equally consistent on weekdays and weekends';
+  }
+
+  double weeklyCompletionRateForHabit(String habitId) {
+    final now = DateTime.now();
+    int total = 0, done = 0;
+    for (int d = 0; d < 28; d++) {
+      final ds = _dateFmt.format(now.subtract(Duration(days: d)));
+      if (dueHabitsForDate(ds).any((h) => h.id == habitId)) {
+        total++;
+        if (getCompletionForHabit(habitId, ds) != null) done++;
+      }
+    }
+    return total > 0 ? done / total : 0.0;
+  }
+
+  double consistencyScoreForHabit(String habitId) {
+    final h = habits.firstWhere((h) => h.id == habitId, orElse: () =>
+        Habit(id: '', name: '', type: HabitType.boolean, section: HabitSection.custom, colorValue: 0));
+    final ageDays = DateTime.now().difference(h.createdAt).inDays + 1;
+    int done = 0;
+    final now = DateTime.now();
+    for (int d = 0; d < ageDays; d++) {
+      final ds = _dateFmt.format(now.subtract(Duration(days: d)));
+      if (getCompletionForHabit(habitId, ds) != null) done++;
+    }
+    return ageDays > 0 ? done / ageDays : 0.0;
+  }
+
+  // habits often done on the same day as habitId
+  List<String> correlatedHabits(String habitId, {int topN = 2}) {
+    final counts = <String, int>{};
+    for (final c in completions.where((c) => c.completed && c.habitId == habitId)) {
+      for (final other in completions.where((x) => x.completed && x.date == c.date && x.habitId != habitId)) {
+        counts[other.habitId] = (counts[other.habitId] ?? 0) + 1;
+      }
+    }
+    final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    return sorted.take(topN).map((e) {
+      final h = habits.firstWhere((h) => h.id == e.key, orElse: () =>
+          Habit(id: '', name: e.key, type: HabitType.boolean, section: HabitSection.custom, colorValue: 0));
+      return h.name;
+    }).where((n) => n.isNotEmpty).toList();
+  }
+
+  // --- Grace Period: resolve effective date for a completion ---
+  String effectiveDateForNow() {
+    final now = DateTime.now();
+    if (gracePeriodHours > 0 && now.hour < gracePeriodHours) {
+      return _dateFmt.format(now.subtract(const Duration(days: 1)));
+    }
+    return _dateFmt.format(now);
+  }
+
+  // --- Streak Shields ---
+  void awardShield(String habitId) {
+    final idx = habits.indexWhere((h) => h.id == habitId);
+    if (idx < 0) return;
+    final h = habits[idx];
+    final streak = getStreakForHabit(habitId);
+    int tier = 0;
+    if (streak >= 30) tier = 3;
+    else if (streak >= 14) tier = 2;
+    else if (streak >= 7) tier = 1;
+    if (tier > h.shieldTier) {
+      habits[idx] = h.copyWith(shieldTier: tier, shieldsRemaining: tier);
+      _save();
+      notifyListeners();
+    }
+  }
+
+  // --- Chain CRUD ---
+  HabitChain? chainForHabit(String habitId) {
+    try {
+      return chains.firstWhere((c) => c.habitIds.contains(habitId));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void addChain(HabitChain chain) {
+    chains.add(chain);
+    for (int i = 0; i < chain.habitIds.length; i++) {
+      final idx = habits.indexWhere((h) => h.id == chain.habitIds[i]);
+      if (idx >= 0) habits[idx] = habits[idx].copyWith(chainId: chain.id, chainOrder: i + 1);
+    }
+    _save();
+    notifyListeners();
+  }
+
+  void removeChain(String chainId) {
+    chains.removeWhere((c) => c.id == chainId);
+    for (int i = 0; i < habits.length; i++) {
+      if (habits[i].chainId == chainId) habits[i] = habits[i].copyWith(clearChain: true);
+    }
+    _save();
+    notifyListeners();
+  }
+
+  // Returns how far through the chain (completedSteps, totalSteps) for a date
+  (int, int) chainProgressForDate(String chainId, String date) {
+    final chain = chains.firstWhere((c) => c.id == chainId,
+        orElse: () => HabitChain(id: '', name: '', habitIds: []));
+    int done = 0;
+    for (final hId in chain.habitIds) {
+      if (getCompletionForHabit(hId, date) != null) done++;
+    }
+    return (done, chain.habitIds.length);
+  }
+
+  // Leaderboard sorted by streak / score / xp
+  List<Map<String, dynamic>> leaderboard({String sort = 'streak'}) {
+    final active = habits.where((h) => !h.archived).toList();
+    return active.map((h) {
+      return {
+        'habit': h,
+        'streak': getStreakForHabit(h.id),
+        'score': habitScore(h.id),
+        'xp': (_xpPerCompletion * h.difficultyMultiplier * completions.where((c) => c.habitId == h.id && c.completed).length).round(),
+      };
+    }).toList()
+      ..sort((a, b) {
+        if (sort == 'score') return (b['score'] as double).compareTo(a['score'] as double);
+        if (sort == 'xp') return (b['xp'] as int).compareTo(a['xp'] as int);
+        return (b['streak'] as int).compareTo(a['streak'] as int);
+      });
+  }
+
+  // Weekly frequency rate for frequency-target habits (xPerWeek)
+  (int, int) weeklyFrequencyProgress(String habitId) {
+    final h = habits.firstWhere((h) => h.id == habitId, orElse: () =>
+        Habit(id: '', name: '', type: HabitType.boolean, section: HabitSection.custom, colorValue: 0));
+    final target = h.frequencyTarget ?? 7;
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    int done = 0;
+    for (int d = 0; d < 7; d++) {
+      final ds = _dateFmt.format(weekStart.add(Duration(days: d)));
+      if (getCompletionForHabit(habitId, ds) != null) done++;
+    }
+    return (done, target);
+  }
+
+  // --- Export 2.0 ---
   String exportData() => jsonEncode({
+        'version': 2,
+        'exportedAt': DateTime.now().toIso8601String(),
         'habits': habits.map((e) => e.toJson()).toList(),
         'completions': completions.map((e) => e.toJson()).toList(),
         'journal': journal.map((e) => e.toJson()).toList(),
+        'chains': chains.map((e) => e.toJson()).toList(),
         'activeMode': activeMode,
       });
 

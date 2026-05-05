@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'stats_screen.dart';
 import 'add_habit_screen.dart';
+import 'insights_screen.dart';
 import 'profile_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -19,6 +20,7 @@ class _MainShellState extends State<MainShell> {
     HomeScreen(),
     StatsScreen(),
     SizedBox(), // placeholder for add
+    InsightsScreen(),
     ProfileScreen(),
   ];
 
@@ -40,7 +42,8 @@ class _MainShellState extends State<MainShell> {
                 _navItem(0, Icons.grid_view_rounded, 'Habits'),
                 _navItem(1, Icons.bar_chart_rounded, 'Stats'),
                 _navItem(2, Icons.add_rounded, 'Add'),
-                _navItem(3, Icons.person_outline, 'Profile'),
+                _navItem(3, Icons.insights_rounded, 'Insights'),
+                _navItem(4, Icons.person_outline, 'Profile'),
               ],
             ),
           ),

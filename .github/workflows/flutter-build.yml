@@ -55,16 +55,45 @@ jobs:
         run: flutter test || true
         continue-on-error: true
 
-      - name: Patch out Firebase plugin for CI build
-        run: |
-          sed -i 's|id("com.google.gms.google-services")|// id("com.google.gms.google-services")|g' android/app/build.gradle.kts
-          sed -i 's|id("com.google.gms.google-services") version "4.4.2" apply false|// id("com.google.gms.google-services") version "4.4.2" apply false|g' android/settings.gradle.kts
-
       - name: Create local.properties
         run: |
           FLUTTER_SDK=$(dirname $(dirname $(which flutter)))
           echo "flutter.sdk=$FLUTTER_SDK" > android/local.properties
           cat android/local.properties
+
+      - name: Generate placeholder google-services.json
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "123456789012",
+              "project_id": "init-habits-ci-placeholder",
+              "storage_bucket": "init-habits-ci-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:123456789012:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.habittracker"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyDPlaceholderKeyForCIBuildOnly0000000"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
 
       - name: Build release APK
         run: |
@@ -85,8 +114,9 @@ jobs:
           cd ${{ github.workspace }}
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git stash push --include-untracked -m "ci-temp" || true
           git checkout -B ci-logs
-          cp flutter_app/build.log build-log.txt
+          cp flutter_app/build.log build-log.txt 2>/dev/null || echo "no build.log" > build-log.txt
           git add build-log.txt
           git commit -m "ci: build log $(date -u +%Y%m%d_%H%M%S) [skip ci]"
           git push origin ci-logs --force
