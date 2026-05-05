@@ -6,6 +6,7 @@ import '../stores/habit_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/terminal_header.dart';
 import '../widgets/habit_timer_sheet.dart';
+import '../widgets/score_sparkline.dart';
 import 'add_habit_screen.dart';
 import 'habit_detail_screen.dart';
 
@@ -243,6 +244,9 @@ class HomeScreen extends StatelessWidget {
     final streak = store.getStreakForHabit(habit.id);
     final isNegative = habit.type == HabitType.negative;
     final isTimer = habit.type == HabitType.timer;
+    final score = store.habitScore(habit.id);
+    final sparkScores = store.habitScoreHistory(habit.id, days: 14);
+    final scorePct = (score * 100).round();
 
     return GestureDetector(
       onTap: () {
@@ -288,6 +292,18 @@ class HomeScreen extends StatelessWidget {
             Text('${habit.targetMinutes}m', style: TextStyle(color: AppColors.textTertiary, fontSize: 9)),
           if (habit.type == HabitType.count && habit.targetCount != null)
             Text('/${habit.targetCount}', style: TextStyle(color: AppColors.textTertiary, fontSize: 9)),
+          if (sparkScores.length >= 2) ...[
+            const SizedBox(width: 8),
+            ScoreSparkline(scores: sparkScores, color: color),
+            const SizedBox(width: 4),
+            Text('$scorePct%',
+                style: TextStyle(color: AppColors.textTertiary, fontSize: 9)),
+          ],
+          if (habit.shieldsRemaining > 0) ...[
+            const SizedBox(width: 6),
+            Text('${'🛡' * habit.shieldsRemaining}',
+                style: const TextStyle(fontSize: 9)),
+          ],
           if (streak >= 2) ...[
             const SizedBox(width: 6),
             Container(

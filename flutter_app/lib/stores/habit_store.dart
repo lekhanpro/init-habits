@@ -151,15 +151,32 @@ class HabitStore extends ChangeNotifier {
 
   void toggleCompletion(String habitId, String date) {
     final existing = getCompletionForHabit(habitId, date);
-    if (existing != null) {
+    final wasCompleted = existing != null;
+    if (wasCompleted) {
       completions.removeWhere((c) => c.id == existing.id);
     } else {
       completions.add(Completion(id: _uuid.v4(), habitId: habitId, date: date));
     }
     if (isDemo) isDemo = false;
+    if (!wasCompleted) _maybeAwardShield(habitId);
     _evaluateAchievements();
     _save();
     notifyListeners();
+  }
+
+  // Award shield when streak crosses 7/14/30 thresholds.
+  void _maybeAwardShield(String habitId) {
+    final idx = habits.indexWhere((h) => h.id == habitId);
+    if (idx < 0) return;
+    final h = habits[idx];
+    final streak = getStreakForHabit(habitId);
+    int tier = 0;
+    if (streak >= 30) tier = 3;
+    else if (streak >= 14) tier = 2;
+    else if (streak >= 7) tier = 1;
+    if (tier > h.shieldTier) {
+      habits[idx] = h.copyWith(shieldTier: tier, shieldsRemaining: tier);
+    }
   }
 
   int getStreakForHabit(String habitId) {
