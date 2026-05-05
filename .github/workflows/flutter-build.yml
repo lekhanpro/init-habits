@@ -68,16 +68,19 @@ jobs:
 
       - name: Build release APK
         run: |
-          flutter build apk --release || {
-            echo "=== BUILD FAILED ==="
-            echo "--- Gradle error log ---"
-            find android -name "*.log" -type f | head -5 | xargs -I{} sh -c 'echo "=== {} ==="; cat {}' 2>/dev/null || true
-            echo "--- Build output ---"
-            ls -la build/app/outputs/ 2>/dev/null || true
-            exit 1
-          }
+          flutter build apk --release 2>&1 | tee build.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: flutter_app/build.log
+          if-no-files-found: ignore
 
       - name: Copy APK to flutter_app/app-release.apk
+        if: success()
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk app-release.apk
           ls -la app-release.apk
