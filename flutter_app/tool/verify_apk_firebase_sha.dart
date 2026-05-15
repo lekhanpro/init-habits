@@ -25,7 +25,7 @@ void main(List<String> args) {
     );
   }
 
-  final result = Process.runSync(apksignerPath!, [
+  final result = Process.runSync(apksignerPath, [
     'verify',
     '--print-certs',
     apk.path,
@@ -40,10 +40,10 @@ void main(List<String> args) {
 
   final output = '${result.stdout}\n${result.stderr}';
   final apkSha1 = RegExp(
-    r'Signer #1 certificate SHA-1 digest:\s*([0-9a-fA-F:]+)',
+    r'(?:Signer #1 certificate|V\d+ Signer: certificate) SHA-1 digest:\s*([0-9a-fA-F:]+)',
   ).firstMatch(output)?.group(1);
   final apkSha256 = RegExp(
-    r'Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F:]+)',
+    r'(?:Signer #1 certificate|V\d+ Signer: certificate) SHA-256 digest:\s*([0-9a-fA-F:]+)',
   ).firstMatch(output)?.group(1);
 
   if (apkSha1 == null || apkSha1.isEmpty) {

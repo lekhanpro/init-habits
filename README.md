@@ -113,7 +113,7 @@ SHA-1:   DD:82:94:4A:E5:EC:BF:2D:7F:65:48:0F:64:40:B4:B5:47:54:0F:83
 SHA-256: AF:A9:8A:76:AF:DE:06:FC:C5:5D:D6:7F:17:89:12:77:3C:56:88:4B:7D:E5:6A:90:3A:2A:52:12:75:CA:45:E2
 ```
 
-Add those fingerprints to the Android app in Firebase if you want the already-published debug-signed APK to work. For production, use a real release keystore instead, add that keystore's SHA-1 and SHA-256 to Firebase, refresh `google-services.json`, and configure the GitHub Actions signing secrets above.
+Add those fingerprints to the Android app in Firebase if you want the already-published APK to work. For production and future CI builds, use a real release keystore instead, add that keystore's SHA-1 and SHA-256 to Firebase, refresh `google-services.json`, and configure the GitHub Actions signing secrets above. Debug signing keys are not a dependable release strategy because local and GitHub runner debug keys can differ.
 
 The config checker can be run locally:
 
