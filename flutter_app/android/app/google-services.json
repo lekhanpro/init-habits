@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "391671861358-amlotc4pt5kk1bnhlfkbhq836ndjot31.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.habittracker",
+            "certificate_hash": "fafdb72b62188084b8241ec5d17775e833f31e99"
+          }
+        },
+        {
           "client_id": "391671861358-hhvtvnmb2ja2qqbr0crt3hpjr9tds6is.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
