@@ -1,6 +1,6 @@
 # init.habits Flutter App
 
-This is the production Flutter app for init.habits. It delivers the mobile habit tracker, Android release build, local-first state, analytics, reminders, and Firebase-ready authentication.
+This is the production Flutter app for init.habits. It delivers the mobile habit tracker, Android release build, unsigned iOS build artifact, local-first state, analytics, reminders, and Firebase-ready authentication.
 
 ## Current Release
 
@@ -16,6 +16,7 @@ flutter_app/app-release.apk
 
 - Daily habit tracking for boolean, count, timer, and negative habits
 - Schedule-aware routines with configurable grace period
+- Focus Queue for prioritizing today's remaining habits
 - XP, levels, achievements, streak shields, milestones, and habit chains
 - Stats, insights, per-habit detail, contribution views, and score trends
 - Templates, challenges, Pomodoro flow, journal, and milestone log
@@ -40,7 +41,7 @@ google_fonts
 uuid
 ```
 
-## Build Locally
+## Build Android Locally
 
 ```powershell
 cd D:\Habittracker\flutter_app
@@ -50,6 +51,26 @@ flutter pub get
 flutter build apk --release --no-shrink
 Copy-Item build\app\outputs\flutter-apk\app-release.apk app-release.apk -Force
 ```
+
+## Build iOS Locally
+
+iOS builds require macOS and Xcode.
+
+```bash
+cd flutter_app
+flutter pub get
+flutter build ios --release --no-codesign
+```
+
+The unsigned build is useful for CI validation. To install on a physical iPhone, sign the app through Xcode, TestFlight, or another Apple signing flow.
+
+## Firebase Auth Configuration
+
+```bash
+dart run tool/check_firebase_config.dart --strict
+```
+
+Android Google Sign-In needs an Android OAuth client in `android/app/google-services.json` with the SHA-1/SHA-256 of the APK signing key. iOS Google Sign-In needs `ios/Runner/GoogleService-Info.plist` and the `REVERSED_CLIENT_ID` URL scheme in `ios/Runner/Info.plist`.
 
 ## Validate
 
@@ -74,10 +95,11 @@ On push to `main`, GitHub Actions:
 3. Restores dependencies
 4. Formats Dart sources
 5. Runs analysis and tests as non-blocking checks
-6. Verifies `android/app/google-services.json`
+6. Runs Firebase configuration diagnostics
 7. Builds `flutter build apk --release --no-shrink`
-8. Uploads the APK artifact
-9. Commits the refreshed `flutter_app/app-release.apk` to `main`
+8. Builds `flutter build ios --release --no-codesign`
+9. Uploads Android and iOS artifacts
+10. Commits the refreshed `flutter_app/app-release.apk` to `main`
 
 ## Source Layout
 

@@ -1,4 +1,4 @@
-name: Flutter Build & Release APK
+name: Flutter Build Android & iOS
 
 on:
   push:
@@ -43,6 +43,29 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Check Firebase auth configuration
+        run: dart run tool/check_firebase_config.dart
+
+      - name: Configure Android release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            {
+              echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+              echo "keyPassword=$ANDROID_KEY_PASSWORD"
+              echo "keyAlias=$ANDROID_KEY_ALIAS"
+              echo "storeFile=upload-keystore.jks"
+            } > android/key.properties
+            echo "Release signing configured from GitHub secrets."
+          else
+            echo "::warning::Android signing secrets are not configured. APK will be debug-signed, and Google Sign-In may fail unless Firebase has that signing key SHA."
+          fi
 
       - name: Fix formatting
         run: dart format lib test
@@ -119,3 +142,44 @@ jobs:
           git status
           git diff --cached --quiet || git commit -m "ci: update app-release.apk [skip ci]"
           git push origin HEAD:main
+
+  build-ios:
+    name: Build Unsigned iOS App
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check Firebase auth configuration
+        run: dart run tool/check_firebase_config.dart
+
+      - name: Build unsigned iOS release app
+        run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned iOS app
+        run: |
+          cd build/ios/iphoneos
+          zip -r init-habits-ios-unsigned-app.zip Runner.app
+
+      - name: Upload unsigned iOS app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: init-habits-ios-unsigned-app
+          path: flutter_app/build/ios/iphoneos/init-habits-ios-unsigned-app.zip
+          if-no-files-found: error

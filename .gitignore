@@ -15,6 +15,9 @@ coverage/
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
+**/android/key.properties
+**/android/app/*.jks
+**/android/app/*.keystore
 
 # Generated/IDE
 .idea/
@@ -24,6 +27,7 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+hs_err_pid*.log
 
 # Release binaries (intermediate build outputs)
 flutter_app/build/

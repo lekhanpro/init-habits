@@ -11,6 +11,7 @@ import '../models/challenge.dart';
 import 'achievements_screen.dart';
 import 'chains_screen.dart';
 import 'challenges_screen.dart';
+import 'focus_queue_screen.dart';
 import 'journal_screen.dart';
 import 'milestones_log_screen.dart';
 import 'pomodoro_screen.dart';
@@ -118,6 +119,10 @@ class ProfileScreen extends StatelessWidget {
               // Quick links
               Text('// shortcuts', style: TextStyle(color: AppColors.textTertiary, fontSize: 10)),
               const SizedBox(height: 8),
+              _actionRow(Icons.route_outlined, 'Focus Queue',
+                  '${store.focusHabits(limit: 8).length} habits waiting', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const FocusQueueScreen()));
+              }),
               _actionRow(Icons.book_outlined, 'Journal', r'$ journal.open()', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalScreen()));
               }),
