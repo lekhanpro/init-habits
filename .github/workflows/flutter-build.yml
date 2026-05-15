@@ -98,12 +98,19 @@ jobs:
           flutter build apk --release --no-shrink 2>&1 | tee build.log
           exit ${PIPESTATUS[0]}
 
+      - name: Verify APK signing certificate matches Firebase OAuth
+        run: |
+          dart run tool/verify_apk_firebase_sha.dart --apk build/app/outputs/flutter-apk/app-release.apk 2>&1 | tee apk-signing.log
+          exit ${PIPESTATUS[0]}
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: build-log
-          path: flutter_app/build.log
+          path: |
+            flutter_app/build.log
+            flutter_app/apk-signing.log
           if-no-files-found: ignore
 
       - name: Commit build log on failure
@@ -114,7 +121,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git stash push --include-untracked -m "ci-temp" || true
           git checkout -B ci-logs
-          cp flutter_app/build.log build-log.txt 2>/dev/null || echo "no build.log" > build-log.txt
+          {
+            echo "== build.log =="
+            cat flutter_app/build.log 2>/dev/null || echo "no build.log"
+            echo
+            echo "== apk-signing.log =="
+            cat flutter_app/apk-signing.log 2>/dev/null || echo "no apk-signing.log"
+          } > build-log.txt
           git add build-log.txt
           git commit -m "ci: build log $(date -u +%Y%m%d_%H%M%S) [skip ci]"
           git push origin ci-logs --force
