@@ -104,6 +104,15 @@ ANDROID_KEY_PASSWORD
 
 `ANDROID_KEYSTORE_BASE64` should be the base64-encoded contents of the `.jks` file. When these secrets exist, CI signs the APK with the stable release key. Without them, the workflow falls back to debug signing and prints a warning.
 
+Current CI release signing key configured in GitHub Actions secrets:
+
+```text
+SHA-1:   FA:FD:B7:2B:62:18:80:84:B8:24:1E:C5:D1:77:75:E8:33:F3:1E:99
+SHA-256: E1:AE:91:65:58:2C:19:CE:60:7F:50:97:B1:75:A4:1B:C5:09:F4:BE:77:13:AE:CD:E5:11:38:19:67:4E:0F:E8
+```
+
+Add these two fingerprints to Firebase for the production CI APK, then download the refreshed `google-services.json` and replace `flutter_app/android/app/google-services.json`.
+
 The committed Android Firebase config currently contains SHA-1 `45:23:89:F3:8A:8F:6F:76:EB:AA:32:E2:ED:CB:05:63:BB:63:BB:EA`. The installed APK must be signed with that key, or Firebase must be updated with the SHA fingerprint for the key that signs the APK.
 
 If Google Sign-In shows `Google Sign-In is not configured for this build`, the APK signing key and Firebase Android OAuth client do not match. The current committed APK was signed with:
