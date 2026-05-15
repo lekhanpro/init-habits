@@ -1,5 +1,7 @@
 # init.habits
 
+![init.habits logo](flutter_app/assets/brand/init_habits_logo_512.png)
+
 init.habits is a professional Flutter habit tracker for people who want a focused, data-rich routine system instead of a toy checklist. The app uses a terminal-inspired interface, local-first storage, analytics, reminders, challenges, XP, achievements, and release automation for Android and iOS build artifacts.
 
 [Repository](https://github.com/lekhanpro/init-habits) | [Actions](https://github.com/lekhanpro/init-habits/actions) | [Issues](https://github.com/lekhanpro/init-habits/issues)
@@ -101,6 +103,8 @@ ANDROID_KEY_PASSWORD
 ```
 
 `ANDROID_KEYSTORE_BASE64` should be the base64-encoded contents of the `.jks` file. When these secrets exist, CI signs the APK with the stable release key. Without them, the workflow falls back to debug signing and prints a warning.
+
+The committed Android Firebase config currently contains SHA-1 `45:23:89:F3:8A:8F:6F:76:EB:AA:32:E2:ED:CB:05:63:BB:63:BB:EA`. The installed APK must be signed with that key, or Firebase must be updated with the SHA fingerprint for the key that signs the APK.
 
 The config checker can be run locally:
 

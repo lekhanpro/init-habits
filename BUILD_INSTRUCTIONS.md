@@ -53,6 +53,8 @@ ANDROID_KEY_PASSWORD
 
 Without those secrets, CI falls back to debug signing. The APK can still be installed, but Google Sign-In may fail unless Firebase has the debug key fingerprint for that exact build.
 
+The committed Android Firebase config currently contains SHA-1 `45:23:89:F3:8A:8F:6F:76:EB:AA:32:E2:ED:CB:05:63:BB:63:BB:EA`. The installed APK must be signed with that key, or Firebase must be updated with the SHA fingerprint for the key that signs the APK.
+
 ## iOS Install Path
 
 CI uploads an unsigned iOS `Runner.app` zip. It cannot be installed on a physical iPhone until it is signed by Apple.
