@@ -1,0 +1,77 @@
+== build.log ==
+Resolving dependencies...
+Downloading packages...
+  _flutterfire_internals 1.3.59 (1.3.71 available)
+  firebase_auth 5.7.0 (6.5.1 available)
+  firebase_auth_platform_interface 7.7.3 (9.0.1 available)
+  firebase_auth_web 5.15.3 (6.2.1 available)
+  firebase_core 3.15.2 (4.9.0 available)
+  firebase_core_platform_interface 6.0.3 (7.0.1 available)
+  firebase_core_web 2.24.1 (3.7.0 available)
+  fl_chart 0.69.2 (1.2.0 available)
+  flutter_local_notifications 17.2.4 (21.0.0 available)
+  flutter_local_notifications_linux 4.0.1 (8.0.0 available)
+  flutter_local_notifications_platform_interface 7.2.0 (11.0.0 available)
+  google_fonts 6.3.3 (8.1.0 available)
+  google_sign_in 6.3.0 (7.2.0 available)
+  google_sign_in_android 6.2.1 (7.2.10 available)
+  google_sign_in_ios 5.9.0 (6.3.0 available)
+  google_sign_in_platform_interface 2.5.0 (3.1.0 available)
+  google_sign_in_web 0.12.4+4 (1.1.3 available)
+  hooks 1.0.2 (1.0.3 available)
+  matcher 0.12.19 (0.12.20 available)
+  meta 1.17.0 (1.18.2 available)
+  native_toolchain_c 0.17.6 (0.18.0 available)
+  path_provider_android 2.2.23 (2.3.1 available)
+  share_plus 10.1.4 (13.1.0 available)
+  share_plus_platform_interface 5.0.2 (7.1.0 available)
+  test_api 0.7.10 (0.7.12 available)
+  timezone 0.9.4 (0.11.0 available)
+  url_launcher_web 2.4.2 (2.4.3 available)
+  vector_math 2.2.0 (2.3.0 available)
+  vm_service 15.0.2 (15.2.0 available)
+  win32 5.15.0 (6.2.0 available)
+  xml 6.6.1 (7.0.1 available)
+Got dependencies!
+31 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Running Gradle task 'assembleRelease'...                        
+Warning: Flutter support for your project's Kotlin version (2.0.21) will soon be dropped. Please upgrade your Kotlin version to a version of at least 2.1.0 soon.
+Alternatively, use the flag "--android-skip-build-dependency-validation" to bypass this check.
+
+Potential fix: Your project's KGP version is typically defined in the plugins block of the `settings.gradle` file (/home/runner/work/init-habits/init-habits/flutter_app/android/settings.gradle), by a plugin with the id of org.jetbrains.kotlin.android. 
+If you don't see a plugins block, your project was likely created with an older template version, in which case it is most likely defined in the top-level build.gradle file (/home/runner/work/init-habits/init-habits/flutter_app/android/build.gradle) by the ext.kotlin_version property.
+
+Checking the license for package NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/licenses
+License for package NDK (Side by side) 27.0.12077973 accepted.
+Preparing "Install NDK (Side by side) 27.0.12077973 v.27.0.12077973".
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" ready.
+Installing NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/ndk/27.0.12077973
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" complete.
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" finished.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 7296 bytes (99.6% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Caught exception: Already watching path: /home/runner/work/init-habits/init-habits/flutter_app/android
+Checking the license for package CMake 3.22.1 in /usr/local/lib/android/sdk/licenses
+License for package CMake 3.22.1 accepted.
+Preparing "Install CMake 3.22.1 v.3.22.1".
+"Install CMake 3.22.1 v.3.22.1" ready.
+Installing CMake 3.22.1 in /usr/local/lib/android/sdk/cmake/3.22.1
+"Install CMake 3.22.1 v.3.22.1" complete.
+"Install CMake 3.22.1 v.3.22.1" finished.
+Running Gradle task 'assembleRelease'...                          317.8s
+✓ Built build/app/outputs/flutter-apk/app-release.apk (56.1MB)
+
+== apk-signing.log ==
+Running build hooks...Running build hooks...V2 Signer: certificate DN: C=US, O=Android, CN=Android Debug
+V2 Signer: certificate SHA-256 digest: f11598d11a9653bd48c7546b1cd729cf758692096da01d20a3f1e9d954c5beeb
+V2 Signer: certificate SHA-1 digest: 0ac2936ac29fa069051388ad6623077fb94d2fb1
+V2 Signer: certificate MD5 digest: 67759f8d9bfd6c3e5ab2d3e286454273
+APK signer SHA-1: 0A:C2:93:6A:C2:9F:A0:69:05:13:88:AD:66:23:07:7F:B9:4D:2F:B1
+APK signer SHA-256: F1:15:98:D1:1A:96:53:BD:48:C7:54:6B:1C:D7:29:CF:75:86:92:09:6D:A0:1D:20:A3:F1:E9:D9:54:C5:BE:EB
+Firebase Android OAuth SHA-1 entries:
+- 45:23:89:F3:8A:8F:6F:76:EB:AA:32:E2:ED:CB:05:63:BB:63:BB:EA
+- 6E:6B:00:B2:52:05:DB:EB:E3:4C:76:BF:74:74:9B:01:C4:15:9C:78
+- DD:82:94:4A:E5:EC:BF:2D:7F:65:48:0F:64:40:B4:B5:47:54:0F:83
+::error::APK signing SHA-1 does not match Firebase Android OAuth. Add the APK SHA-1/SHA-256 to Firebase and download a fresh google-services.json, or configure CI to sign with the registered release keystore.
