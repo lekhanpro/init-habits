@@ -14,6 +14,7 @@ void main(List<String> args) {
   }
 
   final androidConfig = File('android/app/google-services.json');
+  final androidPackageName = _androidApplicationId();
   if (!androidConfig.existsSync()) {
     issue(
       'android/app/google-services.json is missing. Android Firebase Auth and Google Sign-In will not initialize.',
@@ -22,6 +23,21 @@ void main(List<String> args) {
     final json =
         jsonDecode(androidConfig.readAsStringSync()) as Map<String, dynamic>;
     final clients = (json['client'] as List? ?? const []);
+    final matchingPackageClients = clients
+        .cast<Map<String, dynamic>>()
+        .where(
+          (client) =>
+              ((client['client_info']
+                      as Map<String, dynamic>?)?['android_client_info']
+                  as Map<String, dynamic>?)?['package_name'] ==
+              androidPackageName,
+        )
+        .toList();
+    if (matchingPackageClients.isEmpty) {
+      issue(
+        'google-services.json has no Android client for package $androidPackageName. Add this package in Firebase, download the updated file, and rebuild.',
+      );
+    }
     final oauthClients = clients
         .expand(
           (client) =>
@@ -31,7 +47,10 @@ void main(List<String> args) {
         .cast<Map<String, dynamic>>()
         .toList();
     final hasAndroidOAuth = oauthClients.any(
-      (client) => client['client_type'] == 1,
+      (client) =>
+          client['client_type'] == 1 &&
+          ((client['android_info'] as Map<String, dynamic>?)?['package_name'] ==
+              androidPackageName),
     );
     final hasWebOAuth = oauthClients.any(
       (client) => client['client_type'] == 3,
@@ -73,4 +92,17 @@ void main(List<String> args) {
   if (hasIssue && strict) {
     exitCode = 1;
   }
+}
+
+String _androidApplicationId() {
+  final gradleFile = File('android/app/build.gradle.kts');
+  if (!gradleFile.existsSync()) {
+    return 'com.inithabits.app';
+  }
+
+  final content = gradleFile.readAsStringSync();
+  return RegExp(
+        r'applicationId\s*=\s*"([^"]+)"',
+      ).firstMatch(content)?.group(1) ??
+      'com.inithabits.app';
 }

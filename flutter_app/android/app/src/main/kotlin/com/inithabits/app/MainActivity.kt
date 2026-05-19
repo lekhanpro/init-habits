@@ -1,4 +1,4 @@
-package com.habittracker
+package com.inithabits.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -85,15 +85,22 @@ Copy-Item build\app\outputs\flutter-apk\app-release.apk app-release.apk -Force
 
 ## Android Signing And Google Sign-In
 
+Android package name:
+
+```text
+com.inithabits.app
+```
+
 Google Sign-In on Android depends on the SHA-1/SHA-256 fingerprint of the signing key. A debug-signed APK and a release-signed APK have different fingerprints.
 
 Recommended production setup:
 
 1. Create a release keystore.
-2. Add the keystore SHA-1 and SHA-256 to the Android app in Firebase.
-3. Download the updated `google-services.json`.
-4. Replace `flutter_app/android/app/google-services.json`.
-5. Add these GitHub Actions secrets:
+2. Add an Android app in Firebase with package `com.inithabits.app`.
+3. Add the keystore SHA-1 and SHA-256 to that Android app in Firebase.
+4. Download the updated `google-services.json`.
+5. Replace `flutter_app/android/app/google-services.json`.
+6. Add these GitHub Actions secrets:
 
 ```text
 ANDROID_KEYSTORE_BASE64
@@ -113,16 +120,16 @@ SHA-256: E1:AE:91:65:58:2C:19:CE:60:7F:50:97:B1:75:A4:1B:C5:09:F4:BE:77:13:AE:CD
 
 Add these two fingerprints to Firebase for the production CI APK, then download the refreshed `google-services.json` and replace `flutter_app/android/app/google-services.json`.
 
-The committed Android Firebase config currently contains SHA-1 `45:23:89:F3:8A:8F:6F:76:EB:AA:32:E2:ED:CB:05:63:BB:63:BB:EA`. The installed APK must be signed with that key, or Firebase must be updated with the SHA fingerprint for the key that signs the APK.
+After the package rename to `com.inithabits.app`, the Firebase Android app must use that exact package name. A `google-services.json` generated for the old `com.habittracker` package will not build or sign in correctly.
 
-If Google Sign-In shows `Google Sign-In is not configured for this build`, the APK signing key and Firebase Android OAuth client do not match. The current committed APK was signed with:
+If Google Sign-In shows `Google Sign-In is not configured for this build`, the APK package name, signing key, and Firebase Android OAuth client do not all match. The current CI APK is signed with:
 
 ```text
-SHA-1:   DD:82:94:4A:E5:EC:BF:2D:7F:65:48:0F:64:40:B4:B5:47:54:0F:83
-SHA-256: AF:A9:8A:76:AF:DE:06:FC:C5:5D:D6:7F:17:89:12:77:3C:56:88:4B:7D:E5:6A:90:3A:2A:52:12:75:CA:45:E2
+SHA-1:   FA:FD:B7:2B:62:18:80:84:B8:24:1E:C5:D1:77:75:E8:33:F3:1E:99
+SHA-256: E1:AE:91:65:58:2C:19:CE:60:7F:50:97:B1:75:A4:1B:C5:09:F4:BE:77:13:AE:CD:E5:11:38:19:67:4E:0F:E8
 ```
 
-Add those fingerprints to the Android app in Firebase if you want the already-published APK to work. For production and future CI builds, use a real release keystore instead, add that keystore's SHA-1 and SHA-256 to Firebase, refresh `google-services.json`, and configure the GitHub Actions signing secrets above. Debug signing keys are not a dependable release strategy because local and GitHub runner debug keys can differ.
+Add those fingerprints to the `com.inithabits.app` Android app in Firebase, refresh `google-services.json`, and configure the GitHub Actions signing secrets above. Debug signing keys are not a dependable release strategy because local and GitHub runner debug keys can differ.
 
 The config checker can be run locally:
 
