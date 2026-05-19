@@ -10,6 +10,7 @@ init.habits is a professional Flutter habit tracker for people who want a focuse
 
 - Production mobile app: `flutter_app/`
 - Latest Android APK: `flutter_app/app-release.apk`
+- Latest Play Store App Bundle: `flutter_app/app-release.aab`
 - iOS CI artifact: unsigned `Runner.app` zip from GitHub Actions
 - Web/PWA experiment: `app/`
 - Current app line: v2.1+
@@ -61,15 +62,22 @@ init.habits is a professional Flutter habit tracker for people who want a focuse
     │   ├── theme/
     │   └── widgets/
     ├── tool/
-    └── app-release.apk
+    ├── app-release.apk
+    └── app-release.aab
 ```
 
-## Android APK
+## Android Release Files
 
-The workflow builds Android on every push to `main` and uploads an artifact named `init-habits-release-apk`. On `main`, it also commits the refreshed APK back to:
+The workflow builds Android on every push to `main` and uploads:
+
+- `init-habits-release-apk` for sideload testing
+- `init-habits-release-aab` for Google Play Console
+
+On `main`, it also commits the refreshed release files back to:
 
 ```text
 flutter_app/app-release.apk
+flutter_app/app-release.aab
 ```
 
 Local build:
@@ -80,7 +88,9 @@ $env:JAVA_HOME = "D:\tools\java17"
 $env:Path = "$env:JAVA_HOME\bin;D:\flutter\bin;$env:Path"
 flutter pub get
 flutter build apk --release --no-shrink
+flutter build appbundle --release --no-shrink
 Copy-Item build\app\outputs\flutter-apk\app-release.apk app-release.apk -Force
+Copy-Item build\app\outputs\bundle\release\app-release.aab app-release.aab -Force
 ```
 
 ## Android Signing And Google Sign-In
@@ -200,17 +210,18 @@ flutter run
 
 `.github/workflows/flutter-build.yml` currently:
 
-- Builds Android APK on Ubuntu
+- Builds Android APK and Play Store AAB on Ubuntu
 - Builds unsigned iOS app on macOS
 - Runs Firebase configuration diagnostics
-- Verifies the APK signing certificate matches the Android OAuth SHA in Firebase config
+- Verifies the APK and AAB signing certificates match the Android OAuth SHA in Firebase config
 - Runs formatting, analysis, and tests
 - Uploads Android and iOS artifacts
-- Commits `flutter_app/app-release.apk` back to `main`
+- Commits `flutter_app/app-release.apk` and `flutter_app/app-release.aab` back to `main`
 
 ## Notes
 
 - `flutter_app/app-release.apk` is committed for easy direct download.
+- `flutter_app/app-release.aab` is committed for Google Play Console releases.
 - The iOS artifact is intentionally unsigned until Apple signing credentials are configured.
 - Firebase API keys in mobile config files identify the Firebase project; access control still belongs in Firebase rules and OAuth configuration.
 - The nested `app/` directory is a separate web/PWA implementation and is not the source of the Android/iOS builds.

@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build-android:
-    name: Build Release APK
+    name: Build Android APK & AAB
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -103,6 +103,16 @@ jobs:
           dart run tool/verify_apk_firebase_sha.dart --apk build/app/outputs/flutter-apk/app-release.apk 2>&1 | tee apk-signing.log
           exit ${PIPESTATUS[0]}
 
+      - name: Build release App Bundle
+        run: |
+          flutter build appbundle --release --no-shrink 2>&1 | tee -a build.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Verify App Bundle signing certificate matches Firebase OAuth
+        run: |
+          dart run tool/verify_aab_firebase_sha.dart --aab build/app/outputs/bundle/release/app-release.aab 2>&1 | tee aab-signing.log
+          exit ${PIPESTATUS[0]}
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -111,6 +121,7 @@ jobs:
           path: |
             flutter_app/build.log
             flutter_app/apk-signing.log
+            flutter_app/aab-signing.log
           if-no-files-found: ignore
 
       - name: Commit build log on failure
@@ -127,6 +138,9 @@ jobs:
             echo
             echo "== apk-signing.log =="
             cat flutter_app/apk-signing.log 2>/dev/null || echo "no apk-signing.log"
+            echo
+            echo "== aab-signing.log =="
+            cat flutter_app/aab-signing.log 2>/dev/null || echo "no aab-signing.log"
           } > build-log.txt
           git add build-log.txt
           git commit -m "ci: build log $(date -u +%Y%m%d_%H%M%S) [skip ci]"
@@ -138,6 +152,12 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk app-release.apk
           ls -la app-release.apk
 
+      - name: Copy App Bundle to flutter_app/app-release.aab
+        if: success()
+        run: |
+          cp build/app/outputs/bundle/release/app-release.aab app-release.aab
+          ls -la app-release.aab
+
       - name: Upload release APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -145,15 +165,22 @@ jobs:
           path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
-      - name: Commit & push updated APK
+      - name: Upload release App Bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: init-habits-release-aab
+          path: flutter_app/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Commit & push updated Android release files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           cd ${{ github.workspace }}
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add flutter_app/app-release.apk
+          git add flutter_app/app-release.apk flutter_app/app-release.aab
           git status
-          git diff --cached --quiet || git commit -m "ci: update app-release.apk [skip ci]"
+          git diff --cached --quiet || git commit -m "ci: update android release artifacts [skip ci]"
           git push origin HEAD:main
 
   build-ios:

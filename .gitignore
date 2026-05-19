@@ -31,7 +31,8 @@ hs_err_pid*.log
 
 # Release binaries (intermediate build outputs)
 flutter_app/build/
-# Keep the committed top-level release APK
-!flutter_app/app-release.apk
 *.aab
 *.ipa
+# Keep the committed top-level release artifacts
+!flutter_app/app-release.apk
+!flutter_app/app-release.aab
