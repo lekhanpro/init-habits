@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import '../models/settings.dart';
 import '../models/milestone.dart';
 import '../models/challenge.dart';
 import '../data/habit_templates.dart';
+import '../services/analytics_service.dart';
 import '../services/notification_service.dart';
 
 const _uuid = Uuid();
@@ -180,6 +182,7 @@ class HabitStore extends ChangeNotifier {
         _recordMilestone(habitId, s);
       }
     }
+    unawaited(AnalyticsService.instance.logHabitCompleted(completed: !wasCompleted));
     _evaluateAchievements();
     _save();
     notifyListeners();
@@ -306,6 +309,7 @@ class HabitStore extends ChangeNotifier {
     if (isDemo) isDemo = false;
     _save();
     NotificationService.instance.scheduleForHabit(habit);
+    unawaited(AnalyticsService.instance.logHabitCreated(habit.type.name));
     _evaluateAchievements();
     notifyListeners();
   }
@@ -348,6 +352,7 @@ class HabitStore extends ChangeNotifier {
     activeMode = modeId;
     isDemo = false;
     NotificationService.instance.rescheduleAll(habits, enabled: notificationsEnabled);
+    unawaited(AnalyticsService.instance.logModeChanged(modeId));
     _save();
     notifyListeners();
   }

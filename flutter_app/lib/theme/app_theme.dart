@@ -660,8 +660,14 @@ class AppTheme {
 /// Wraps MaterialApp and rebuilds it on theme change.
 class ThemedApp extends StatelessWidget {
   final Widget Function(BuildContext) homeBuilder;
+  final List<NavigatorObserver> navigatorObservers;
   final String title;
-  const ThemedApp({super.key, required this.homeBuilder, required this.title});
+  const ThemedApp({
+    super.key,
+    required this.homeBuilder,
+    required this.title,
+    this.navigatorObservers = const <NavigatorObserver>[],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -671,6 +677,7 @@ class ThemedApp extends StatelessWidget {
       title: title,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.fromPalette(tc.palette),
+      navigatorObservers: navigatorObservers,
       home: Builder(builder: homeBuilder),
     );
   }

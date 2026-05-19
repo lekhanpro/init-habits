@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'analytics_service.dart';
 
 class AuthService extends ChangeNotifier {
   static const String _webClientId =
@@ -28,6 +31,7 @@ class AuthService extends ChangeNotifier {
 
   Future<void> signInWithEmail(String email, String password) async {
     await _auth.signInWithEmailAndPassword(email: email, password: password);
+    unawaited(AnalyticsService.instance.logLogin('password'));
   }
 
   Future<void> signUpWithEmail(String email, String password) async {
@@ -35,6 +39,7 @@ class AuthService extends ChangeNotifier {
       email: email,
       password: password,
     );
+    unawaited(AnalyticsService.instance.logSignUp('password'));
   }
 
   Future<void> signInWithGoogle() async {
@@ -46,6 +51,7 @@ class AuthService extends ChangeNotifier {
       idToken: googleAuth.idToken,
     );
     await _auth.signInWithCredential(credential);
+    unawaited(AnalyticsService.instance.logLogin('google'));
   }
 
   Future<void> signOut() async {

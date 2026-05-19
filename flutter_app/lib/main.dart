@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'services/analytics_service.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 import 'stores/habit_store.dart';
@@ -25,6 +26,10 @@ void main() async {
     await NotificationService.instance.init();
   } catch (_) {}
 
+  if (firebaseReady) {
+    await AnalyticsService.instance.logAppReady(firebaseReady: true);
+  }
+
   runApp(InitHabitsApp(firebaseReady: firebaseReady));
 }
 
@@ -46,7 +51,11 @@ class InitHabitsApp extends StatelessWidget {
       ],
       child: ThemedApp(
         title: 'init.habits',
-        homeBuilder: (ctx) => firebaseReady ? const _AuthGate() : const MainShell(),
+        navigatorObservers: firebaseReady
+            ? [AnalyticsService.instance.observer]
+            : const <NavigatorObserver>[],
+        homeBuilder: (ctx) =>
+            firebaseReady ? const _AuthGate() : const MainShell(),
       ),
     );
   }
